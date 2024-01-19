@@ -1,0 +1,11 @@
+.DS_Store
+/*.gem
+/.idea
+/.install
+/.irb
+/.irb_history
+/.test.db*
+/.yardoc
+/coverage
+/doc
+/logs

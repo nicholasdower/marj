@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+  echo "fatal: container not specified" >&2
+  echo "usage: $0 <container>" >&2
+  exit 1
+fi
+
+container="$1"
+
+result="`docker container inspect -f '{{.State.Status}}' $container 2>/dev/null`"
+
+if [ "$result" != "running" ]; then
+  docker-compose up -d "$container"_healthy
+fi

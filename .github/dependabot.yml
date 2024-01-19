@@ -1,0 +1,18 @@
+# See https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+version: 2
+updates:
+  - package-ecosystem: "bundler"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 2
+    groups:
+      production:
+        dependency-type: production
+      development:
+        dependency-type: development
+        exclude-patterns:
+        - "rubocop*"
+      rubocop:
+        patterns:
+        - "rubocop*"

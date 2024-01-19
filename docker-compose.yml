@@ -1,0 +1,48 @@
+services:
+  marj_mysql:
+    container_name: marj_mysql
+    image: mysql/mysql-server:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - '3306:3306'
+    volumes:
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./sql/my.cnf:/etc/mysql/my.cnf:ro
+      - ./logs/mysql-general.log:/var/log/mysql-general.log
+      - ./logs/mysql-error.log:/var/log/mysql-error.log
+    command: mysqld --general-log --general-log-file=/var/log/mysql-general.log --log-error=/var/log/mysql-error.log
+    healthcheck:
+      test: ['CMD', 'mysql', '--user=root', '--password=root', '--execute', 'show databases;']
+      interval: 5s
+      timeout: 2s
+      retries: 10
+      start_period: 10s
+  marj_mysql_healthy:
+    container_name: marj_mysql_healthy
+    command: 'true'
+    image: busybox
+    depends_on:
+      marj_mysql:
+        condition: service_healthy
+  marj_postgres:
+    container_name: marj_postgres
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: marj
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ["CMD", "pg_isready", "--host", "localhost", "--username", "root", "--dbname", "marj", "--timeout", "5"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+      start_period: 10s
+  marj_postgres_healthy:
+    container_name: marj_postgres_healthy
+    image: busybox
+    depends_on:
+      marj_postgres:
+        condition: service_healthy
