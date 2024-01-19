@@ -6,6 +6,7 @@ ENV['LEVEL'] ||= Logger::INFO.to_s
 
 require 'fileutils'
 require 'irb'
+require 'awesome_print'
 require_relative 'init'
 
 def reload

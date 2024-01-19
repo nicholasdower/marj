@@ -117,3 +117,11 @@ remove-images:
 .PHONY: release
 release:
 	./script/release.rb
+
+.PHONY: doc
+doc:
+	@yard
+
+.PHONY: open-doc
+open-doc:
+	@if [[ `which open` ]]; then open ./doc/Marj.html; fi

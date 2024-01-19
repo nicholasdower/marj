@@ -14,6 +14,10 @@ require 'active_job/base'
 # If not using Rails, configure via ActiveJob::Base:
 #
 #   ActiveJob::Base.queue_adapter = :marj
+#
+# Alternatively, configure for a single job:
+#
+#   SomeJob.queue_adapter = :marj
 class MarjAdapter
   # Enqueue a job for immediate execution.
   #
@@ -22,7 +26,7 @@ class MarjAdapter
   def enqueue(job)
     raise "expected ActiveJob::Base, found #{job.class}" unless job.is_a?(ActiveJob::Base)
 
-    Marj.enqueue(job)
+    Marj.send(:enqueue, job)
   end
 
   # Enqueue a job for execution at the specified time.
@@ -33,6 +37,6 @@ class MarjAdapter
   def enqueue_at(job, timestamp)
     raise "expected ActiveJob::Base, found #{job.class}" unless job.is_a?(ActiveJob::Base)
 
-    Marj.enqueue(job, timestamp)
+    Marj.send(:enqueue, job, timestamp)
   end
 end

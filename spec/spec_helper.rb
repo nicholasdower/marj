@@ -21,6 +21,8 @@ ENV['LEVEL'] ||= Logger::FATAL.to_s
 
 require_relative '../script/init'
 
+Dir.glob('spec/support/**/*.rb').each { |f| require "./#{f}" }
+
 RSpec.configure do |config|
   config.before(:suite) do
     TestDb.reset
