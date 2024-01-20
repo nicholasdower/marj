@@ -1,6 +1,6 @@
 # Marj
 
-An ActiveJob queuing backend which uses ActiveRecord. 
+Marj is a Minimal ActiveRecord-based Jobs library.
 
 API docs: https://www.rubydoc.info/github/nicholasdower/marj <br>
 RubyGems: https://rubygems.org/gems/marj <br>
@@ -12,7 +12,9 @@ For more information on ActiveJob, see:
 - https://edgeguides.rubyonrails.org/active_job_basics.html
 - https://www.rubydoc.info/gems/activejob
 
-## Basic Setup
+## Setup
+
+### 1. Install
 
 Add the following to your Gemfile:
 
@@ -20,23 +22,29 @@ Add the following to your Gemfile:
 gem 'marj', '~> 1.0'
 ```
 
+### 2. Create the jobs table
+
 Apply a database migration:
 
 ```ruby
 class CreateJobs < ActiveRecord::Migration[7.1]
   def self.up
     create_table :jobs, id: :string, primary_key: :job_id do |table|
-      table.string   :job_class, null: false
-      table.string   :queue_name
-      table.integer  :priority
+      table.string   :job_class,            null: false
       table.text     :arguments,            null: false
+      table.string   :queue_name,           null: false
+      table.integer  :priority
       table.integer  :executions,           null: false
       table.text     :exception_executions, null: false
-      table.string   :locale
-      table.string   :timezone
-      table.datetime :enqueued_at, null: false
+      table.datetime :enqueued_at,          null: false
       table.datetime :scheduled_at
+      table.string   :locale,               null: false
+      table.string   :timezone,             null: false
     end
+
+    add_index :jobs, %i[enqueued_at]
+    add_index :jobs, %i[scheduled_at]
+    add_index :jobs, %i[priority scheduled_at enqueued_at]
   end
 
   def self.down
@@ -45,25 +53,65 @@ class CreateJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
+### 3. Configure the queue adapter
+
 If using Rails, configure the queue adapter via `Rails::Application`:
 
 ```ruby
+require 'marj'
+
+# Configure via Rails::Application:
 class MyApplication < Rails::Application
-  require 'marj'
   config.active_job.queue_adapter = :marj
+end
+
+# Or for specific jobs:
+class SomeJob < ActiveJob::Base
+  self.queue_adapter = :marj
 end
 ```
 
-If not using Rails, configure the queue adapter via `ActiveJob::Base`:
+If not using Rails:
 
 ```ruby
+require 'marj'
+require 'marj/record'
+
+# Configure via ActiveJob::Base:
 ActiveJob::Base.queue_adapter = :marj
+
+# Or for specific jobs:
+class SomeJob < ActiveJob::Base
+  self.queue_adapter = :marj
+end
 ```
 
 Alternatively, configure for a single job:
 
 ```ruby
-SomeJob.queue_adapter = :marj
+require 'marj'
+
+class SomeJob < ActiveJob::Base
+  self.queue_adapter = :marj
+end
+```
+
+## Example Usage
+
+```ruby
+# Enqueue and manually run a job:
+job = SampleJob.perform_later('foo')
+job.perform_now
+
+# Enqueue, retrieve and manually run a job:
+SampleJob.perform_later('foo')
+Marj.first.execute
+
+# Run all available jobs:
+Marj.work_off
+
+# Run jobs as they become available:
+Marj.start_worker
 ```
 
 ## ActiveJob Cheatsheet
@@ -78,47 +126,47 @@ class MyApplication < Rails::Application
 end
 
 # Without Rails
-ActiveJob::Base.queue_adapter = :foo           # Instantiates FooAdapter
-ActiveJob::Base.queue_adapter = FooAdapter.new # Uses FooAdapter directly
+ActiveJob::Base.queue_adapter = :foo               # Instantiates FooAdapter
+ActiveJob::Base.queue_adapter = FooAdapter.new     # Uses FooAdapter directly
 ```
 
 ### Creating Jobs
 
 ```ruby
-job = SampleJob.new                 # Created without args, not enqueued
-job = SampleJob.new(args)           # Created with args, not enqueued
-
-job = SampleJob.perform_later       # Enqueued without args
-job = SampleJob.perform_later(args) # Enqueued with args
-
-SampleJob.perform_now               # Created without args, not enqueued unless retried
-SampleJob.perform_now(args)         # Created with args, ot enqueued unless retried
-```
-
-### Enqueueing Jobs
-
-```ruby
-SampleJob.new(args).enqueue                    # Enqueued without options
-SampleJob.new(args).enqueue(options)           # Enqueued with options
-
-SampleJob.perform_later(args)                  # Enqueued without options
-SampleJob.options(options).perform_later(args) # Enqueued with options
-
-SampleJob.perform_now(args)                    # Enqueued on failure if retries configured
-
-ActiveJob.perform_all_later(                   # All enqueued without options
-  SampleJob.new, SampleJob.new
-)
-ActiveJob.perform_all_later(                   # All enqueued with options
-  SampleJob.new, SampleJob.new, options:
-)
-
-SampleJob                                      # All enqueued without options
-  .set(options)
-  .perform_all_later(
-    SampleJob.new, SampleJob.new
-  )
-SampleJob                                      # All enqueued with options
+job = SampleJob.new                                # Created without args, not enqueued
+job = SampleJob.new(args)                          # Created with args, not enqueued
+                                                   
+job = SampleJob.perform_later                      # Enqueued without args
+job = SampleJob.perform_later(args)                # Enqueued with args
+                                                   
+SampleJob.perform_now                              # Created without args, not enqueued unless retried
+SampleJob.perform_now(args)                        # Created with args, ot enqueued unless retried
+```                                                
+                                                   
+### Enqueueing Jobs                                
+                                                   
+```ruby                                            
+SampleJob.new(args).enqueue                        # Enqueued without options
+SampleJob.new(args).enqueue(options)               # Enqueued with options
+                                                   
+SampleJob.perform_later(args)                      # Enqueued without options
+SampleJob.options(options).perform_later(args)     # Enqueued with options
+                                                   
+SampleJob.perform_now(args)                        # Enqueued on failure if retries configured
+                                                   
+ActiveJob.perform_all_later(                       # All enqueued without options
+  SampleJob.new, SampleJob.new                     
+)                                                  
+ActiveJob.perform_all_later(                       # All enqueued with options
+  SampleJob.new, SampleJob.new, options:           
+)                                                  
+                                                   
+SampleJob                                          # All enqueued without options
+  .set(options)                                    
+  .perform_all_later(                              
+    SampleJob.new, SampleJob.new                   
+  )                                                
+SampleJob                                          # All enqueued with options
   .set(options)
   .perform_all_later(
     SampleJob.new, SampleJob.new, options:

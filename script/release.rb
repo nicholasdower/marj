@@ -7,7 +7,7 @@ require 'fileutils'
 require 'net/http'
 require 'open3'
 
-require_relative '../lib/marj/version'
+require_relative '../lib/marj'
 
 VERSION_REGEX = /^(0|[1-9][0-9]*)[.](0|[1-9][0-9]*)[.](0|[1-9][0-9]*)?$/.freeze
 PRE_VERSION_REGEX = /^(0|[1-9][0-9]*)[.](0|[1-9][0-9]*)[.](0|[1-9][0-9]*)(?:[.]pre)?$/.freeze
@@ -36,17 +36,10 @@ puts "New version: #{version}"
 puts "Gem file: #{gem_file}"
 puts "Notes:\n#{notes}\n\n"
 
-puts 'Updating lib/marj/version.rb'
+puts 'Updating version'
 File.write(
-  'lib/marj/version.rb',
-  <<~VERSION
-    # frozen_string_literal: true
-
-    module Marj
-      # The Marj version.
-      VERSION = '#{version}'
-    end
-  VERSION
+  'app/models/marj.rb',
+  File.read('app/models/marj.rb').sub(/VERSION = .*/, "VERSION = '#{version}'")
 )
 
 `bundle install`
@@ -96,17 +89,10 @@ puts 'Tagging'
 `git tag v#{version}`
 fail('count not tag commit') unless $CHILD_STATUS.success?
 
-puts 'Updating lib/marj/version.rb'
+puts 'Updating version'
 File.write(
-  'lib/marj/version.rb',
-  <<~VERSION
-    # frozen_string_literal: true
-
-    module Marj
-      # The Marj version.
-      VERSION = '#{next_version}'
-    end
-VERSION
+  'app/models/marj.rb',
+  File.read('app/models/marj.rb').sub(/VERSION = .*/, "VERSION = '#{next_version}'")
 )
 
 `bundle install`

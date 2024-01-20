@@ -13,15 +13,12 @@ if ENV['COVERAGE'] == '1'
   end
 end
 
-require 'awesome_print'
 require 'logger'
 require 'timecop'
 
 ENV['LEVEL'] ||= Logger::FATAL.to_s
 
 require_relative '../script/init'
-
-Dir.glob('spec/support/**/*.rb').each { |f| require "./#{f}" }
 
 RSpec.configure do |config|
   config.before(:suite) do

@@ -2,40 +2,44 @@
 
 ## Setup
 
-Install Ruby >= 2.7.0.
+Install Ruby 3.3.0.
+
+## Development
+
+```shell
+make console  # Start an interactive console
+make rspec    # Run tests
+make coverage # Generate test coverage report
+make doc      # Generate documentation
+make rubocop  # Run RuboCop
+```
 
 ## Logs
 
-To see database or Rails logs when running tests:
+To set the log level:
 
 ```shell
 LEVEL=0 make rspec
-```
-
-Or in the console:
-
-```shell
 LEVEL=0 make console
 ```
 
-## Using MySQL
+## MySQL
 
-By default, SQLite is used when running tests or in the console.
 
-To use MySQL, [install Docker](https://docs.docker.com/get-docker), then:
+To use MySQL rather than SQLite, [install Docker](https://docs.docker.com/get-docker), then:
 
-- Run specs: `make rspec-mysql`
-- Start a console: `make console-mysql`
-- Start the database: `make mysql-server`
-- Start a client: `make mysql-client`
+```shell
+make rspec-mysql
+make console-mysql
+make mysql-client
+```
 
-## Using PostgreSQL
+## PostgreSQL
 
-By default, SQLite is used when running tests or in the console.
+To use PostgreSQL rather than SQLite, [install Docker](https://docs.docker.com/get-docker), then:
 
-To use PostgreSQL, [install Docker](https://docs.docker.com/get-docker), then:
-
-- Run specs: `make rspec-postgres`
-- Start a console: `make console-postgres`
-- Start the server: `make postgres-server`
-- Start a client: `make postgres-client`
+```shell
+make rspec-postgres
+make console-postgres
+make postgres-client
+```
