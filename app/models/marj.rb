@@ -61,14 +61,13 @@ class Marj < ActiveRecord::Base
     # @param arguments [Array, String, NilClass]
     # @return [String]
     def self.dump(arguments)
-      case arguments
-      when Array
-        ActiveJob::Arguments.serialize(arguments).to_json
-      when String, NilClass
-        arguments
-      else
-        raise "invalid arguments: #{arguments}"
+      if arguments.is_a?(Array)
+        return ActiveJob::Arguments.serialize(arguments).to_json
+      elsif arguments.is_a?(String) || arguments.nil?
+        return arguments
       end
+
+      raise "invalid arguments: #{arguments}"
     end
 
     # Converts a string representation of an +arguments+ array into a an array
@@ -88,14 +87,13 @@ class Marj < ActiveRecord::Base
     # @param clazz [Class, String, NilClass]
     # @return [String]
     def self.dump(clazz)
-      case clazz
-      when Class
-        clazz.name
-      when String, NilClass
-        clazz
-      else
-        raise "invalid class: #{clazz}"
+      if clazz.is_a?(Class)
+        return clazz.name
+      elsif clazz.is_a?(String) || clazz.nil?
+        return clazz
       end
+
+      raise "invalid class: #{clazz}"
     end
 
     # Converts a string representation of a class into a class.
@@ -121,33 +119,32 @@ class Marj < ActiveRecord::Base
   end
 
   # Returns an ActiveRecord::Relation scope for enqueued jobs with a +scheduled_at+ that is either +null+ or in the
-  # past.
-  #
-  # Jobs are ordered by:
-  # - +priority+ (+null+ last)
-  # - +scheduled_at+ (+null+ last)
-  # - +enqueued_at+
+  # past. Jobs are ordered by +priority+ (+null+ last), then +scheduled_at+ (+null+ last), then +enqueued_at+.
   #
   # @return [ActiveRecord::Relation]
   def self.available
     where('scheduled_at is null or scheduled_at <= ?', Time.now.utc).order(
-      Arel.sql(
-        <<~SQL.squish
-          CASE WHEN priority IS NULL THEN 1 ELSE 0 END, priority,
-          CASE WHEN scheduled_at IS NULL THEN 1 ELSE 0 END, scheduled_at,
-          enqueued_at
-        SQL
-      )
+      Arel.sql(<<~SQL.squish)
+        CASE WHEN priority IS NULL THEN 1 ELSE 0 END, priority,
+        CASE WHEN scheduled_at IS NULL THEN 1 ELSE 0 END, scheduled_at,
+        enqueued_at
+      SQL
     )
   end
 
-  # Executes any available jobs from the specified source. Returns +true+ if any jobs were executed, +false+ otherwise.
+  # Executes any available jobs from the specified source.
   #
   # @param source [Proc] a job source
-  # @return [Boolean]
+  # @return [NilClass]
   def self.work_off(source = -> { Marj.available.first })
-    result = true while execute_next_available(source)
-    result || false
+    while (record = source.call)
+      begin
+        record.execute
+      rescue Exception
+        # The job should either be discarded or have its executions incremented. Otherwise, something went wrong.
+        raise if Marj.find_by(job_id: record.job_id)&.executions == record.executions
+      end
+    end
   end
 
   # Executes jobs from the specified source as they become available.
@@ -161,24 +158,6 @@ class Marj < ActiveRecord::Base
       sleep delay.in_seconds
     end
   end
-
-  # Executes the next available job. Returns +true+ if a job was executed, +false+ otherwise.
-  #
-  # @return [Boolean]
-  def self.execute_next_available(source = -> { Marj.available.first })
-    if (record = source.call)
-      begin
-        record.execute
-      rescue Exception
-        # The job should either be discarded or have its executions incremented. Otherwise, something went wrong.
-        raise if Marj.find_by(job_id: record.job_id)&.executions == record.executions
-      end
-      true
-    else
-      false
-    end
-  end
-  private_class_method :execute_next_available
 
   # Registers job callbacks used to keep the database record for the specified job in sync.
   #
@@ -204,12 +183,9 @@ class Marj < ActiveRecord::Base
   #
   # @return [ActiveJob::Base]
   def job
-    job = job_class.new
-    Marj.send(:register_callbacks, job)
-
+    job = Marj.send(:register_callbacks, job_class.new)
     job_data = attributes
-    # ActiveJob requires serialized arguments. The record arguments are already deserialized.
-    job_data['arguments'] = JSON.parse(read_attribute_before_type_cast(:arguments))
+    job_data['arguments'] = JSON.parse(read_attribute_before_type_cast(:arguments)) # Skip ArgumentsSerializer
     job_data['enqueued_at'] = job_data['enqueued_at']&.iso8601
     job_data['scheduled_at'] = job_data['scheduled_at']&.iso8601
     job.deserialize(job_data)

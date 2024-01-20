@@ -36,5 +36,6 @@ RSpec.configure do |config|
 
   config.after do
     Timecop.return
+    TestJob.runs.clear
   end
 end

@@ -40,13 +40,9 @@ class MarjAdapter
   # @return [ActiveJob::Base] the enqueued job
   def enqueue_at(job, timestamp)
     job.scheduled_at = timestamp ? Time.at(timestamp).utc : nil
-    serialized = job.serialize.symbolize_keys!
-    job.enqueued_at = Time.iso8601(serialized[:enqueued_at]) # serialize generates a new enqueued_at
-    job.locale = serialized[:locale] # serialize generates a new locale
-    serialized.delete(:provider_job_id) # unused since the DB does not have an ID column
-    serialized[:arguments] = job.arguments # To account for Marj::ArgumentsSerializer
-    serialized[:job_class] = job.class # To account for Marj::JobClassSerializer
+    serialized = job.serialize.symbolize_keys!.without(:provider_job_id).merge(arguments: job.arguments)
     Marj.find_by(job_id: job.job_id)&.update!(serialized) || Marj.create!(serialized)
     Marj.send(:register_callbacks, job)
+    job
   end
 end
