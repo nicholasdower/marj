@@ -24,11 +24,11 @@ rspec: .install
 
 .PHONY: rspec-mysql
 rspec-mysql: .install mysql-server-healthy
-	@DB=mysql rspec
+	@DB=mysql rspec --exclude-pattern 'spec/integration/**/*'
 
 .PHONY: rspec-postgres
 rspec-postgres: .install postgres-server-healthy
-	@DB=postgres rspec
+	@DB=postgres rspec --exclude-pattern 'spec/integration/**/*'
 
 .PHONY: coverage
 coverage: .install
@@ -47,9 +47,9 @@ precommit: mysql-server-healthy postgres-server-healthy
 	@echo Install
 	@bundle install
 	@echo MySQL
-	@DB=mysql rspec --format progress --exclude-pattern spec/rails_integration_spec.rb
+	@DB=mysql rspec --format progress --exclude-pattern 'spec/integration/**/*'
 	@echo PostgreSQL
-	@DB=postgres rspec --format progress --exclude-pattern spec/rails_integration_spec.rb
+	@DB=postgres rspec --format progress --exclude-pattern 'spec/integration/**/*'
 	@echo SQLite
 	@DB=sqlite COVERAGE=1 rspec --format progress
 	@echo Rubocop

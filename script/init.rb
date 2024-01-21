@@ -6,7 +6,6 @@ require 'active_record'
 require 'awesome_print'
 require 'fileutils'
 require 'logger'
-require 'tempfile'
 
 (Dir.glob('lib/**/*.rb') + Dir.glob('app/**/*.rb')).each { |file| require_relative "../#{file}" }
 

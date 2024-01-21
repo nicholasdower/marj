@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require_relative 'spec_helper'
+require_relative '../spec_helper'
+require 'bundler'
 
 describe 'Rails Integration' do
   it 'autoloads, enqueues, executes and deletes' do
@@ -8,10 +9,9 @@ describe 'Rails Integration' do
       expect(
         system(
           <<~SHELL
-            cd rails-sample &&
+            cd sample-rails-app &&
             bundle install > /dev/null && \
-            bundle exec bin/rake db:reset > /dev/null && \
-            bundle exec bin/rake db:setup > /dev/null && \
+            bundle exec bin/rake db:setup > /dev/null 2> /dev/null && \
             bundle exec bin/rake marj:test
           SHELL
         )

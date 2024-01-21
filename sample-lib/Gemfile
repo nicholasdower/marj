@@ -1,0 +1,8 @@
+# frozen_string_literal: true
+
+source 'https://rubygems.org'
+
+marj_version = File.read('../app/models/marj.rb').match(/VERSION = '([^']*)'/)[1]
+
+gem 'marj', marj_version, path: '../'
+gem 'sqlite3', '~> 1.4'

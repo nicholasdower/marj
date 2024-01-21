@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateJobs < ActiveRecord::Migration[7.1]
   def self.up
     create_table :jobs, id: :string, primary_key: :job_id do |table|

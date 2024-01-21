@@ -136,44 +136,38 @@ ActiveJob::Base.queue_adapter = FooAdapter.new     # Uses FooAdapter directly
 ### Creating Jobs
 
 ```ruby
-job = SampleJob.new                                # Created without args, not enqueued
-job = SampleJob.new(args)                          # Created with args, not enqueued
+# Create without enqueueing
+job = SampleJob.new
+job = SampleJob.new(args)
                                                    
-job = SampleJob.perform_later                      # Enqueued without args
-job = SampleJob.perform_later(args)                # Enqueued with args
+# Create and enqueue
+job = SampleJob.perform_later
+job = SampleJob.perform_later(args)
                                                    
-SampleJob.perform_now                              # Created without args, not enqueued unless retried
-SampleJob.perform_now(args)                        # Created with args, ot enqueued unless retried
+# Create and run (enqueued on failure)
+SampleJob.perform_now
+SampleJob.perform_now(args)
 ```                                                
                                                    
 ### Enqueueing Jobs                                
                                                    
 ```ruby                                            
-SampleJob.new(args).enqueue                        # Enqueued without options
-SampleJob.new(args).enqueue(options)               # Enqueued with options
+SampleJob.new(args).enqueue
+SampleJob.new(args).enqueue(options)
                                                    
-SampleJob.perform_later(args)                      # Enqueued without options
-SampleJob.options(options).perform_later(args)     # Enqueued with options
+SampleJob.perform_later(args)
+SampleJob.set(options).perform_later(args)
                                                    
-SampleJob.perform_now(args)                        # Enqueued on failure if retries configured
+# Enqueued on failure
+SampleJob.perform_now(args)
                                                    
-ActiveJob.perform_all_later(                       # All enqueued without options
-  SampleJob.new, SampleJob.new                     
-)                                                  
-ActiveJob.perform_all_later(                       # All enqueued with options
-  SampleJob.new, SampleJob.new, options:           
-)                                                  
+# Enqueue multiple
+ActiveJob.perform_all_later(SampleJob.new, SampleJob.new)                                                  
+ActiveJob.perform_all_later(SampleJob.new, SampleJob.new, options:)                                                  
                                                    
-SampleJob                                          # All enqueued without options
-  .set(options)                                    
-  .perform_all_later(                              
-    SampleJob.new, SampleJob.new                   
-  )                                                
-SampleJob                                          # All enqueued with options
-  .set(options)
-  .perform_all_later(
-    SampleJob.new, SampleJob.new, options:
-  )
+# Enqueue multiple
+SampleJob.set(options).perform_all_later(SampleJob.new, SampleJob.new)                                                
+SampleJob.set(options).perform_all_later(SampleJob.new, SampleJob.new, options:)
 ```
 
 ### Executing Jobs
