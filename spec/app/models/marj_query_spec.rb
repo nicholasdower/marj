@@ -15,26 +15,6 @@ describe 'Marj Query' do
     end
   end
 
-  describe '.queues' do
-    subject { Marj.queue(*queues) }
-
-    before do
-      TestJob.set(queue: 'foo').perform_later
-      Timecop.travel(1.minute)
-      TestJob.set(queue: 'bar').perform_later
-      Timecop.travel(1.minute)
-      TestJob.set(queue: 'baz').perform_later
-      Timecop.travel(1.minute)
-    end
-
-    let(:queues) { %w[foo bar] }
-
-    it 'returns jobs in the specified queues' do
-      expect(subject.count).to eq(2)
-      expect(subject.map(&:queue_name)).to contain_exactly(*queues)
-    end
-  end
-
   describe '.available' do
     it 'returns jobs where scheduled_at is null' do
       TestJob.set(queue: '1').perform_later

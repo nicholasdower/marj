@@ -111,7 +111,10 @@ Marj.first.execute
 Marj.work_off
 
 # Run jobs as they become available:
-Marj.start_worker
+loop do
+  Marj.work_off
+  sleep 5.seconds
+end
 ```
 
 ## ActiveJob Cheatsheet

@@ -46,7 +46,10 @@ require 'active_record'
 #   Marj.work_off
 #
 #   # Run jobs as they become available:
-#   Marj.start_worker
+#   loop do
+#     Marj.work_off
+#     sleep 5.seconds
+#   end
 class Marj < ActiveRecord::Base
   # The Marj version.
   VERSION = '1.0.0.pre'
@@ -110,14 +113,6 @@ class Marj < ActiveRecord::Base
   serialize(:exception_executions, coder: JSON)
   serialize(:job_class, coder: ClassSerializer)
 
-  # Returns an ActiveRecord::Relation scope for jobs in the specified queue(s).
-  #
-  # @param queues [Array<String]
-  # @return [ActiveRecord::Relation]
-  def self.queue(*queues)
-    where(queue_name: queues)
-  end
-
   # Returns an ActiveRecord::Relation scope for enqueued jobs with a +scheduled_at+ that is either +null+ or in the
   # past. Jobs are ordered by +priority+ (+null+ last), then +scheduled_at+ (+null+ last), then +enqueued_at+.
   #
@@ -144,18 +139,6 @@ class Marj < ActiveRecord::Base
         # The job should either be discarded or have its executions incremented. Otherwise, something went wrong.
         raise if Marj.find_by(job_id: record.job_id)&.executions == record.executions
       end
-    end
-  end
-
-  # Executes jobs from the specified source as they become available.
-  #
-  # @param source [Proc] a job source
-  # @param delay [ActiveSupport::Duration] sleep duration after executing all available jobs, defaults to 5s
-  # @return [void]
-  def self.start_worker(source = -> { Marj.available.first }, delay: 5.seconds)
-    loop do
-      work_off(source)
-      sleep delay.in_seconds
     end
   end
 
