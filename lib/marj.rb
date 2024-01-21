@@ -46,3 +46,6 @@ class MarjAdapter
     job
   end
 end
+
+# Enables autoloading.
+class MarjEngine < Rails::Engine; end if defined?(Rails)

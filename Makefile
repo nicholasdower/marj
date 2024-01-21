@@ -47,9 +47,9 @@ precommit: mysql-server-healthy postgres-server-healthy
 	@echo Install
 	@bundle install
 	@echo MySQL
-	@DB=mysql rspec --format progress
+	@DB=mysql rspec --format progress --exclude-pattern spec/rails_integration_spec.rb
 	@echo PostgreSQL
-	@DB=postgres rspec --format progress
+	@DB=postgres rspec --format progress --exclude-pattern spec/rails_integration_spec.rb
 	@echo SQLite
 	@DB=sqlite COVERAGE=1 rspec --format progress
 	@echo Rubocop

@@ -20,7 +20,7 @@ jobs:
   build-lint-test-2-7-0-sqlite:
     name: Build, Lint & Test (2.7.0, SQLite)
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
@@ -33,7 +33,7 @@ jobs:
   build-lint-test-3-3-0-sqlite:
     name: Build, Lint & Test (3.3.0, SQLite)
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
@@ -46,7 +46,7 @@ jobs:
   test-3-3-0-mysql:
     name: Test (3.3.0, MySQL)
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
@@ -57,7 +57,7 @@ jobs:
   test-3-3-0-postgres:
     name: Test (3.3.0, PostgreSQL)
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
