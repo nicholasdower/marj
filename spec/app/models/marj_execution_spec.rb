@@ -37,6 +37,12 @@ describe 'Marj Execution' do
       expect(result.message).to eq('hi')
     end
 
+    it 'updates the record on failure' do
+      TestJob.perform_later('raise "hi"')
+      record = Marj.last
+      expect { record.execute }.to change { record.executions }.from(0).to(1)
+    end
+
     it 'deletes the job on discard' do
       TestJob.perform_later('raise "hi"')
       expect(Marj.count).to eq(1)
@@ -44,6 +50,13 @@ describe 'Marj Execution' do
       expect(Marj.count).to eq(1)
       Marj.last.execute rescue nil
       expect(Marj.count).to eq(0)
+    end
+
+    it 'updates the record on discard' do
+      TestJob.perform_later('raise "hi"')
+      record = Marj.last
+      record.execute
+      expect { record.execute rescue nil }.to change { record.destroyed? }.from(false).to(true)
     end
 
     it 'raises on discard' do

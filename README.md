@@ -75,22 +75,12 @@ If not using Rails:
 
 ```ruby
 require 'marj'
-require 'marj/record'
+require 'marj_record' # Loads ActiveRecord
 
 # Configure via ActiveJob::Base:
 ActiveJob::Base.queue_adapter = :marj
 
 # Or for specific jobs:
-class SomeJob < ActiveJob::Base
-  self.queue_adapter = :marj
-end
-```
-
-Alternatively, configure for a single job:
-
-```ruby
-require 'marj'
-
 class SomeJob < ActiveJob::Base
   self.queue_adapter = :marj
 end
@@ -132,6 +122,38 @@ end
 ActiveJob::Base.queue_adapter = :foo               # Instantiates FooAdapter
 ActiveJob::Base.queue_adapter = FooAdapter.new     # Uses FooAdapter directly
 ```
+
+### Options
+
+- `:wait` - Enqueues the job with the specified delay
+- `:wait_until` - Enqueues the job at the time specified
+- `:queue` - Enqueues the job on the specified queue
+- `:priority` - Enqueues the job with the specified priority
+
+### Callbacks
+
+- `before_enqueue`
+- `after_enqueue`
+- `around_enqueue`
+- `before_perform`
+- `after_perform`
+- `around_perform`
+
+## Handling Exceptions
+
+- `retry_on`
+- `discard_on`
+- `after_discard`
+
+## Configuration
+
+- `config.active_job.retry_jitter`
+- `config.active_job.default_queue_name`
+- `config.active_job.queue_name_prefix`
+- `config.active_job.queue_name_delimiter`
+- `retry_jitter`
+- `queue_name`
+- `queue_as`
 
 ### Creating Jobs
 
