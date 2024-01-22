@@ -25,7 +25,6 @@ LEVEL=0 make console
 
 ## MySQL
 
-
 To use MySQL rather than SQLite, [install Docker](https://docs.docker.com/get-docker), then:
 
 ```shell

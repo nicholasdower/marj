@@ -12,7 +12,7 @@ class Marj < ActiveRecord::Base
 
   # Executes the job associated with this record and returns the result.
   def execute
-    # Normally we would call ActiveJob::Base#execute which has the following implemenation:
+    # Normally we would call ActiveJob::Base#execute which has the following implementation:
     #   ActiveJob::Callbacks.run_callbacks(:execute) do
     #     job = deserialize(job_data)
     #     job.perform_now
@@ -30,7 +30,11 @@ class Marj < ActiveRecord::Base
       job_data = job_data.to_h { |k, v| [k, %w[enqueued_at scheduled_at].include?(k) ? v&.iso8601 : v] }
       job.deserialize(job_data)
 
-      job.perform_now
+      new_executions = executions + 1
+      job.perform_now.tap do
+        # If no error was raised, the job should either be destroyed (success) or updated (retryable failure).
+        raise "job #{job_id} not destroyed or updated" unless destroyed? || (executions == new_executions && !changed?)
+      end
     end
   end
 
@@ -38,7 +42,7 @@ class Marj < ActiveRecord::Base
   # past. Jobs are ordered by +priority+ (+null+ last), then +scheduled_at+ (+null+ last), then +enqueued_at+.
   #
   # @return [ActiveRecord::Relation]
-  def self.available
+  def self.ready
     where('scheduled_at is null or scheduled_at <= ?', Time.now.utc).order(
       Arel.sql(<<~SQL.squish)
         CASE WHEN priority IS NULL THEN 1 ELSE 0 END, priority,
@@ -46,22 +50,6 @@ class Marj < ActiveRecord::Base
         enqueued_at
     SQL
     )
-  end
-
-  # Executes any available jobs from the specified source.
-  #
-  # @param source [Proc] a job source
-  # @return [NilClass]
-  def self.work_off(source = -> { Marj.available.first })
-    while (record = source.call)
-      executions = record.executions
-      begin
-        record.execute
-      rescue Exception
-        # The job should either be discarded or updated. Otherwise, something went wrong.
-        raise unless record.destroyed? || (record.executions == (executions + 1) && !record.changed?)
-      end
-    end
   end
 
   self.table_name = 'jobs'

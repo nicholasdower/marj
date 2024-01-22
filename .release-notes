@@ -1,1 +1,3 @@
-- No change
+- Rename `Marj.available` to `Marj.ready`.
+- Improve docs.
+- Remove `Marj.work_off` in favor of documentation.

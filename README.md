@@ -5,12 +5,14 @@ Marj is a Minimal ActiveRecord-based Jobs library.
 API docs: https://www.rubydoc.info/github/nicholasdower/marj <br>
 RubyGems: https://rubygems.org/gems/marj <br>
 Changelog: https://github.com/nicholasdower/marj/releases <br>
-Issues: https://github.com/nicholasdower/marj/issues
+Issues: https://github.com/nicholasdower/marj/issues <br>
+Development: https://github.com/nicholasdower/marj/blob/master/CONTRIBUTING.md
 
 For more information on ActiveJob, see:
 
 - https://edgeguides.rubyonrails.org/active_job_basics.html
 - https://www.rubydoc.info/gems/activejob
+- https://github.com/nicholasdower/marj/blob/master/README.md#activejob-cheatsheet
 
 ## Setup
 
@@ -22,9 +24,11 @@ Add the following to your Gemfile:
 gem 'marj', '~> 1.0'
 ```
 
-### 2. Create the jobs table
+```shell
+bundle install
+```
 
-Apply a database migration:
+### 2. Create the jobs table
 
 ```ruby
 class CreateJobs < ActiveRecord::Migration[7.1]
@@ -84,15 +88,21 @@ SomeJob.perform_later('foo')
 record = Marj.first
 record.execute
 
-# Run all available jobs:
-Marj.work_off
+# Run all ready jobs:
+while (record = Marj.ready.first)
+  record.execute
+end
 
-# Run all available jobs in a specific queue:
-Marj.work_off(source = -> { Marj.where(queue_name: 'foo').available.first })
+# Run all ready jobs in a specific queue:
+while (record = Marj.where(queue_name: 'foo').ready.first)
+  record.execute
+end
 
-# Run jobs as they become available:
+# Run jobs as they become ready:
 loop do
-  Marj.work_off
+  while (record = Marj.ready.first)
+    record.execute
+  end
   sleep 5.seconds
 end
 ```

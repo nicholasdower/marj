@@ -43,6 +43,13 @@ describe 'Marj Execution' do
       expect { record.execute }.to change { record.executions }.from(0).to(1)
     end
 
+    it 'raises when failed job not saved' do
+      TestJob.perform_later('raise "hi"')
+      record = Marj.last
+      allow(record).to receive(:changed?).and_return(true)
+      expect { record.execute }.to raise_error(StandardError, /job .* not destroyed or updated/)
+    end
+
     it 'deletes the job on discard' do
       TestJob.perform_later('raise "hi"')
       expect(Marj.count).to eq(1)
@@ -50,6 +57,14 @@ describe 'Marj Execution' do
       expect(Marj.count).to eq(1)
       Marj.last.execute rescue nil
       expect(Marj.count).to eq(0)
+    end
+
+    it 'raises when discarded job not destroyed' do
+      TestJob.perform_later('raise "hi"')
+      record = Marj.last
+      allow(record).to receive(:destroyed?).and_return(false)
+      allow(record).to receive(:executions).and_return(0)
+      expect { record.execute }.to raise_error(StandardError, /job .* not destroyed or updated/)
     end
 
     it 'updates the record on discard' do
