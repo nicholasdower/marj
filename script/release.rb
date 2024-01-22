@@ -26,8 +26,8 @@ fail('you must set RUBYGEMS_API_KEY') unless ENV['RUBYGEMS_API_KEY']
 fail('not on master branch') unless `git branch --show-current`.strip == 'master'
 fail('master and origin/master differ') unless `git rev-parse origin/master`.strip == `git rev-parse master`.strip
 
-version = ENV.fetch('VERSION', nil)
-next_version = ENV.fetch('NEXT_VERSION', nil)
+version = ENV.fetch('VERSION')
+next_version = ENV.fetch('NEXT_VERSION')
 notes = File.read('.release-notes').strip
 gem_file = "marj-#{version}.gem"
 
@@ -121,7 +121,7 @@ body = {
 }
 headers = {
   'Accept' => 'application/vnd.github+json',
-  'Authorization' => "Bearer #{ENV.fetch('GITHUB_TOKEN', nil)}"
+  'Authorization' => "Bearer #{ENV.fetch('GITHUB_TOKEN')}"
 }
 response = Net::HTTP.post(uri, body.to_json, headers)
 fail("request failed:\n#{response.body}") unless response.is_a?(Net::HTTPCreated)
@@ -132,7 +132,7 @@ puts 'Uploading release asset'
 uri = URI("https://uploads.github.com/repos/nicholasdower/marj/releases/#{release_id}/assets?name=#{gem_file}")
 headers = {
   'Accept' => 'application/vnd.github+json',
-  'Authorization' => "Bearer #{ENV.fetch('GITHUB_TOKEN', nil)}",
+  'Authorization' => "Bearer #{ENV.fetch('GITHUB_TOKEN')}",
   'Content-Type' => 'application/x-tar'
 }
 binary_data = File.binread(gem_file)
@@ -149,5 +149,5 @@ response = Net::HTTP.post(uri, data, headers)
 fail("request failed:\n#{response.body}") unless response.is_a?(Net::HTTPSuccess)
 
 puts 'Pushing gem'
-`GEM_HOST_API_KEY=#{RUBYGEMS_API_KEY}; gem push #{gem_file}`
+`GEM_HOST_API_KEY=#{ENV.fetch('RUBYGEMS_API_KEY')}; gem push #{gem_file}`
 fail('count not push gem') unless $CHILD_STATUS.success?
