@@ -42,6 +42,8 @@ File.write(
 )
 
 `bundle install`
+`cd sample-rails-app && bundle install`
+`cd sample-lib && bundle install`
 fail('failed to bundle install') unless $CHILD_STATUS.success?
 
 puts 'Updating CHANGELOG.md'
@@ -95,6 +97,8 @@ File.write(
 )
 
 `bundle install`
+`cd sample-rails-app && bundle install`
+`cd sample-lib && bundle install`
 fail('failed to bundle install') unless $CHILD_STATUS.success?
 
 `git commit -a -m "Bump version to #{next_version}"`

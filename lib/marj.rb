@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+Kernel.autoload(:Marj, File.expand_path('../app/models/marj.rb', __dir__))
+
 # ActiveJob queue adapter for Marj.
 class MarjAdapter
   # Enqueue a job for immediate execution.
@@ -19,6 +21,3 @@ class MarjAdapter
     Marj.send(:enqueue, job, timestamp ? Time.at(timestamp).utc : nil)
   end
 end
-
-# Enable auto-loading when running in Rails.
-class MarjEngine < Rails::Engine; end if defined?(Rails)

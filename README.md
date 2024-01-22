@@ -55,32 +55,18 @@ end
 
 ### 3. Configure the queue adapter
 
-If using Rails, configure the queue adapter via `Rails::Application`:
-
 ```ruby
 require 'marj'
 
-# Configure via Rails::Application:
+# With rails:
 class MyApplication < Rails::Application
   config.active_job.queue_adapter = :marj
 end
 
-# Or for specific jobs:
-class SomeJob < ActiveJob::Base
-  self.queue_adapter = :marj
-end
-```
-
-If not using Rails:
-
-```ruby
-require 'marj'
-require 'marj/record' # Loads ActiveRecord
-
-# Configure via ActiveJob::Base:
+# Without Rails:
 ActiveJob::Base.queue_adapter = :marj
 
-# Or for specific jobs:
+# Or for specific jobs (with or without Rails):
 class SomeJob < ActiveJob::Base
   self.queue_adapter = :marj
 end
@@ -95,10 +81,14 @@ job.perform_now
 
 # Enqueue, retrieve and manually run a job:
 SomeJob.perform_later('foo')
-Marj.first.execute
+record = Marj.first
+record.execute
 
 # Run all available jobs:
 Marj.work_off
+
+# Run all available jobs in a specific queue:
+Marj.work_off(source = -> { Marj.where(queue_name: 'foo').available.first })
 
 # Run jobs as they become available:
 loop do
@@ -207,9 +197,9 @@ SomeJob.set(options).perform_all_later(SomeJob.new, SomeJob.new, options:)
 # Executed without enqueueing, enqueued on failure if retries configured
 SomeJob.new(args).perform_now
 SomeJob.perform_now(args)
-ActiveJob::Base.exeucute(SomeJob.new(args).serialize)
+ActiveJob::Base.execute(SomeJob.new(args).serialize)
 
 # Executed after enqueueing
 SomeJob.perform_later(args).perform_now
-ActiveJob::Base.exeucute(SomeJob.perform_later(args).serialize)
+ActiveJob::Base.execute(SomeJob.perform_later(args).serialize)
 ```
