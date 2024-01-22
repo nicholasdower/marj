@@ -8,7 +8,7 @@ require 'active_record'
 # See https://github.com/nicholasdower/marj
 class Marj < ActiveRecord::Base
   # The Marj version.
-  VERSION = '1.1.0'
+  VERSION = '2.0.0.pre'
 
   # Executes the job associated with this record and returns the result.
   def execute
