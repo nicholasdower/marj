@@ -7,7 +7,7 @@ require 'active_record'
 # See https://github.com/nicholasdower/marj
 class Marj < ActiveRecord::Base
   # The Marj version.
-  VERSION = '1.0.0.pre'
+  VERSION = '1.0.0'
 
   self.table_name = 'jobs'
   self.implicit_order_column = 'enqueued_at' # Order by +enqueued_at+ rather than +job_id+ (the default)
