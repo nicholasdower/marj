@@ -127,7 +127,7 @@ SomeJob.queue_adapter = :foo                       # Instantiates FooAdapter
 SomeJob.queue_adapter = FooAdapter.new             # Uses FooAdapter directly
 ```
 
-## Configuration
+### Configuration
 
 - `config.active_job.default_queue_name`
 - `config.active_job.queue_name_prefix`
@@ -158,7 +158,7 @@ SomeJob.queue_adapter = FooAdapter.new             # Uses FooAdapter directly
 - `ActiveJob::Callbacks.singleton_class.set_callback(:execute, :after, &block)`
 - `ActiveJob::Callbacks.singleton_class.set_callback(:execute, :around, &block)`
 
-## Handling Exceptions
+### Handling Exceptions
 
 - `SomeJob.retry_on`
 - `SomeJob.discard_on`
