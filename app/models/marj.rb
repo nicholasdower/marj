@@ -9,7 +9,7 @@ require_relative '../../lib/marj_config'
 # See https://github.com/nicholasdower/marj
 class Marj < ActiveRecord::Base
   # The Marj version.
-  VERSION = '2.0.0'
+  VERSION = '3.0.0.pre'
 
   # Executes the job associated with this record and returns the result.
   def execute

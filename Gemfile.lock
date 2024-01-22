@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    marj (2.0.0)
+    marj (3.0.0.pre)
       activejob (>= 7.1)
       activerecord (>= 7.1)
 
