@@ -2,6 +2,7 @@
 
 require 'active_job'
 require 'active_record'
+require_relative '../../lib/marj_config'
 
 # Marj is a Minimal ActiveRecord-based Jobs library.
 #
@@ -52,7 +53,7 @@ class Marj < ActiveRecord::Base
     )
   end
 
-  self.table_name = 'jobs'
+  self.table_name = MarjConfig.table_name
 
   # Order by +enqueued_at+ rather than +job_id+ (the default)
   self.implicit_order_column = 'enqueued_at'

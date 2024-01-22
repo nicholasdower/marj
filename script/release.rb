@@ -108,7 +108,7 @@ puts 'Pushing changes'
 `git push origin master`
 fail('count not push changes') unless $CHILD_STATUS.success?
 
-puts 'Pushing changes'
+puts 'Pushing tags'
 `git push origin v#{version}`
 fail('count not push tag') unless $CHILD_STATUS.success?
 
@@ -122,12 +122,12 @@ body = {
   draft: false,
   prerelease: false,
   generate_release_notes: false
-}.gsub('\n', '\r\n')
+}.to_json.gsub('\n', '\r\n')
 headers = {
   'Accept' => 'application/vnd.github+json',
   'Authorization' => "Bearer #{ENV.fetch('GITHUB_TOKEN')}"
 }
-response = Net::HTTP.post(uri, body.to_json, headers)
+response = Net::HTTP.post(uri, body, headers)
 fail("request failed:\n#{response.body}") unless response.is_a?(Net::HTTPCreated)
 
 release_id = JSON.parse(response.body)['id']

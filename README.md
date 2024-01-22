@@ -57,6 +57,14 @@ class CreateJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
+To use a different table name:
+
+```ruby
+require 'marj'
+
+MarjConfig.table_name = 'some_name'
+```
+
 ### 3. Configure the queue adapter
 
 ```ruby
@@ -104,6 +112,65 @@ loop do
     record.execute
   end
   sleep 5.seconds
+end
+```
+
+## Extension Examples
+
+### Timeouts
+
+```ruby
+class ApplicationJob < ActiveJob::Base
+  def self.timeout_after(duration)
+    @timeout = duration
+  end
+
+  around_perform do |job, block|
+    if (timeout = job.class.instance_variable_get(:@timeout))
+      ::Timeout.timeout(timeout, StandardError, 'execution expired') { block.call }
+    else
+      block.call
+    end
+  end
+end
+```
+
+### Last Error
+
+```ruby
+class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
+  def self.up
+    add_column :jobs, :last_error, :text
+  end
+
+  def self.down
+    remove_column :jobs, :last_error
+  end
+end
+
+class ApplicationJob < ActiveJob::Base
+  attr_reader :last_error
+
+  def last_error=(error)
+    if error.is_a?(Exception)
+      backtrace = error.backtrace&.map { |line| "\t#{line}" }&.join("\n")
+      error = backtrace ? "#{error.class}: #{error.message}\n#{backtrace}" : "#{error.class}: #{error.message}"
+    end
+
+    @last_error = error&.truncate(10_000, omission: '… (truncated)')
+  end
+
+  def set(options = {})
+    super.tap { self.last_error = options[:error] if options[:error] }
+  end
+
+  def serialize
+    super.merge('last_error' => @last_error)
+  end
+
+  def deserialize(job_data)
+    super.tap { self.last_error = job_data['last_error'] }
+  end
 end
 ```
 

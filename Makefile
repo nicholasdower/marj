@@ -32,7 +32,7 @@ rspec-postgres: .install postgres-server-healthy
 
 .PHONY: coverage
 coverage: .install
-	@COVERAGE=1 rspec
+	@COVERAGE=1 rspec --exclude-pattern 'spec/integration/**/*'
 
 .PHONY: rubocop
 rubocop: .install
@@ -52,6 +52,8 @@ precommit: mysql-server-healthy postgres-server-healthy
 	@DB=postgres rspec --format progress --exclude-pattern 'spec/integration/**/*'
 	@echo SQLite
 	@DB=sqlite COVERAGE=1 rspec --format progress
+	@echo Coverage
+	@DB=sqlite COVERAGE=1 rspec --format progress --exclude-pattern 'spec/integration/**/*'
 	@echo Rubocop
 	@rubocop
 	@echo Yard
