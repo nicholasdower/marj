@@ -118,11 +118,11 @@ body = {
   tag_name: "v#{version}",
   target_commitish: target_commit,
   name: "v#{version} Release",
-  body: notes.gsub("\n", '\r\n'),
+  body: notes,
   draft: false,
   prerelease: false,
   generate_release_notes: false
-}
+}.gsub('\n', '\r\n')
 headers = {
   'Accept' => 'application/vnd.github+json',
   'Authorization' => "Bearer #{ENV.fetch('GITHUB_TOKEN')}"
@@ -153,5 +153,5 @@ response = Net::HTTP.post(uri, data, headers)
 fail("request failed:\n#{response.body}") unless response.is_a?(Net::HTTPSuccess)
 
 puts 'Pushing gem'
-`GEM_HOST_API_KEY=#{ENV.fetch('RUBYGEMS_API_KEY')}; gem push #{gem_file}`
-fail('count not push gem') unless $CHILD_STATUS.success?
+success = system("export GEM_HOST_API_KEY=#{ENV.fetch('RUBYGEMS_API_KEY')}; gem push #{gem_file}")
+fail('count not push gem') unless success

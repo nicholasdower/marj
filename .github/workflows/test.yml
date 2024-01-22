@@ -8,10 +8,9 @@ on:
     paths:
       - '**'
       - '!**/*.md'
-      - '!/todo'
       - '!/.release-notes'
-      - '!/scripts/release'
-      - '!/scripts/console'
+      - '!/script/release.rb'
+      - '!/script/console.rb'
       - '!/LICENSE.txt'
       - '!/.github/dependabot.yml'
       - '!/.github/workflows/release.yml'
