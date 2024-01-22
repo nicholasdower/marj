@@ -62,8 +62,8 @@ class Marj < ActiveRecord::Base
       begin
         record.execute
       rescue Exception
-        # The job should either be discarded or have its executions incremented. Otherwise, something went wrong.
-        raise unless record.destroyed? || record.executions == executions + 1
+        # The job should either be discarded or updated. Otherwise, something went wrong.
+        raise unless record.destroyed? || (record.executions == (executions + 1) && !record.changed?)
       end
     end
   end
@@ -75,8 +75,7 @@ class Marj < ActiveRecord::Base
   def self.register_callbacks(job, record)
     return if job.singleton_class.instance_variable_get(:@__marj)
 
-    job.singleton_class.before_perform { |j| j.successfully_enqueued = false } # To detect whether re-enqueued
-    job.singleton_class.after_perform { |j| record.destroy! unless j.successfully_enqueued? }
+    job.singleton_class.after_perform { |_j| record.destroy! }
     job.singleton_class.after_discard { |_j, _exception| record.destroy! }
     job.singleton_class.instance_variable_set(:@__marj, record)
     job
