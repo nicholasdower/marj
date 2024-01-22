@@ -6,7 +6,7 @@ require 'active_job'
 require 'active_job/base'
 require 'active_record'
 require 'marj'
-require 'marj_record'
+require 'marj/record'
 require 'sqlite3'
 
 ActiveJob::Base.queue_adapter = :marj

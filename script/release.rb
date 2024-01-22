@@ -31,7 +31,6 @@ next_version = ENV.fetch('NEXT_VERSION', nil)
 notes = File.read('.release-notes').strip
 gem_file = "marj-#{version}.gem"
 
-puts "Old version: #{Marj::VERSION}"
 puts "New version: #{version}"
 puts "Gem file: #{gem_file}"
 puts "Notes:\n#{notes}\n\n"

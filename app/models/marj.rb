@@ -103,8 +103,7 @@ class Marj < ActiveRecord::Base
   def execute
     job = Marj.send(:register_callbacks, job_class.new, self)
     job_data = attributes.merge('arguments' => JSON.parse(read_attribute_before_type_cast(:arguments)))
-    job_data['enqueued_at'] = job_data['enqueued_at']&.iso8601
-    job_data['scheduled_at'] = job_data['scheduled_at']&.iso8601
+    job_data = job_data.to_h { |k, v| [k, %w[enqueued_at scheduled_at].include?(k) ? v&.iso8601 : v] }
     job.deserialize(job_data)
     ActiveJob::Callbacks.run_callbacks(:execute) { job.perform_now }
   end

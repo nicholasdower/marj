@@ -75,7 +75,7 @@ If not using Rails:
 
 ```ruby
 require 'marj'
-require 'marj_record' # Loads ActiveRecord
+require 'marj/record' # Loads ActiveRecord
 
 # Configure via ActiveJob::Base:
 ActiveJob::Base.queue_adapter = :marj
@@ -90,11 +90,11 @@ end
 
 ```ruby
 # Enqueue and manually run a job:
-job = SampleJob.perform_later('foo')
+job = SomeJob.perform_later('foo')
 job.perform_now
 
 # Enqueue, retrieve and manually run a job:
-SampleJob.perform_later('foo')
+SomeJob.perform_later('foo')
 Marj.first.execute
 
 # Run all available jobs:
@@ -121,7 +121,23 @@ end
 # Without Rails
 ActiveJob::Base.queue_adapter = :foo               # Instantiates FooAdapter
 ActiveJob::Base.queue_adapter = FooAdapter.new     # Uses FooAdapter directly
+
+# Single Job
+SomeJob.queue_adapter = :foo                       # Instantiates FooAdapter
+SomeJob.queue_adapter = FooAdapter.new             # Uses FooAdapter directly
 ```
+
+## Configuration
+
+- `config.active_job.default_queue_name`
+- `config.active_job.queue_name_prefix`
+- `config.active_job.queue_name_delimiter`
+- `config.active_job.retry_jitter`
+- `SomeJob.queue_name_prefix`
+- `SomeJob.queue_name_delimiter`
+- `SomeJob.retry_jitter`
+- `SomeJob.queue_name`
+- `SomeJob.queue_as`
 
 ### Options
 
@@ -132,75 +148,68 @@ ActiveJob::Base.queue_adapter = FooAdapter.new     # Uses FooAdapter directly
 
 ### Callbacks
 
-- `before_enqueue`
-- `after_enqueue`
-- `around_enqueue`
-- `before_perform`
-- `after_perform`
-- `around_perform`
+- `SomeJob.before_enqueue`
+- `SomeJob.after_enqueue`
+- `SomeJob.around_enqueue`
+- `SomeJob.before_perform`
+- `SomeJob.after_perform`
+- `SomeJob.around_perform`
+- `ActiveJob::Callbacks.singleton_class.set_callback(:execute, :before, &block)`
+- `ActiveJob::Callbacks.singleton_class.set_callback(:execute, :after, &block)`
+- `ActiveJob::Callbacks.singleton_class.set_callback(:execute, :around, &block)`
 
 ## Handling Exceptions
 
-- `retry_on`
-- `discard_on`
-- `after_discard`
-
-## Configuration
-
-- `config.active_job.retry_jitter`
-- `config.active_job.default_queue_name`
-- `config.active_job.queue_name_prefix`
-- `config.active_job.queue_name_delimiter`
-- `retry_jitter`
-- `queue_name`
-- `queue_as`
+- `SomeJob.retry_on`
+- `SomeJob.discard_on`
+- `SomeJob.after_discard`
 
 ### Creating Jobs
 
 ```ruby
 # Create without enqueueing
-job = SampleJob.new
-job = SampleJob.new(args)
-                                                   
+job = SomeJob.new
+job = SomeJob.new(args)
+
 # Create and enqueue
-job = SampleJob.perform_later
-job = SampleJob.perform_later(args)
-                                                   
+job = SomeJob.perform_later
+job = SomeJob.perform_later(args)
+
 # Create and run (enqueued on failure)
-SampleJob.perform_now
-SampleJob.perform_now(args)
-```                                                
-                                                   
-### Enqueueing Jobs                                
-                                                   
-```ruby                                            
-SampleJob.new(args).enqueue
-SampleJob.new(args).enqueue(options)
-                                                   
-SampleJob.perform_later(args)
-SampleJob.set(options).perform_later(args)
-                                                   
+SomeJob.perform_now
+SomeJob.perform_now(args)
+```
+
+### Enqueueing Jobs
+
+```ruby
+SomeJob.new(args).enqueue
+SomeJob.new(args).enqueue(options)
+
+SomeJob.perform_later(args)
+SomeJob.set(options).perform_later(args)
+
 # Enqueued on failure
-SampleJob.perform_now(args)
-                                                   
+SomeJob.perform_now(args)
+
 # Enqueue multiple
-ActiveJob.perform_all_later(SampleJob.new, SampleJob.new)                                                  
-ActiveJob.perform_all_later(SampleJob.new, SampleJob.new, options:)                                                  
-                                                   
+ActiveJob.perform_all_later(SomeJob.new, SomeJob.new)
+ActiveJob.perform_all_later(SomeJob.new, SomeJob.new, options:)
+
 # Enqueue multiple
-SampleJob.set(options).perform_all_later(SampleJob.new, SampleJob.new)                                                
-SampleJob.set(options).perform_all_later(SampleJob.new, SampleJob.new, options:)
+SomeJob.set(options).perform_all_later(SomeJob.new, SomeJob.new)
+SomeJob.set(options).perform_all_later(SomeJob.new, SomeJob.new, options:)
 ```
 
 ### Executing Jobs
 
 ```ruby
 # Executed without enqueueing, enqueued on failure if retries configured
-SampleJob.new(args).perform_now
-SampleJob.perform_now(args)
-ActiveJob::Base.exeucute(SampleJob.new(args).serialize)
+SomeJob.new(args).perform_now
+SomeJob.perform_now(args)
+ActiveJob::Base.exeucute(SomeJob.new(args).serialize)
 
 # Executed after enqueueing
-SampleJob.perform_later(args).perform_now
-ActiveJob::Base.exeucute(SampleJob.perform_later(args).serialize)
+SomeJob.perform_later(args).perform_now
+ActiveJob::Base.exeucute(SomeJob.perform_later(args).serialize)
 ```
