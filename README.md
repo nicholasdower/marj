@@ -97,20 +97,17 @@ record = Marj.first
 record.execute
 
 # Run all ready jobs:
-while (record = Marj.ready.first)
-  record.execute
-end
+Marj.ready.each(&:execute)
+
+# Run all ready jobs, querying each time:
+loop { Marj.ready.first&.tap(&:execute) || break }
 
 # Run all ready jobs in a specific queue:
-while (record = Marj.where(queue_name: 'foo').ready.first)
-  record.execute
-end
+loop { Marj.where(queue_name: 'foo').ready.first&.tap(&:execute) || break }
 
 # Run jobs as they become ready:
 loop do
-  while (record = Marj.ready.first)
-    record.execute
-  end
+  loop { Marj.ready.first&.tap(&:execute) || break }
 rescue Exception => e
   logger.error(e)
 ensure
