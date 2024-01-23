@@ -39,6 +39,10 @@ Development: https://github.com/nicholasdower/marj/blob/master/CONTRIBUTING.md
 
 ```shell
 bundle add marj
+
+# or
+
+gem install marj
 ```
 
 ### 2. Configure
