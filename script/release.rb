@@ -37,8 +37,8 @@ puts "Notes:\n#{notes}\n\n"
 
 puts 'Updating version'
 File.write(
-  'app/models/marj.rb',
-  File.read('app/models/marj.rb').sub(/VERSION = .*/, "VERSION = '#{version}'")
+  'lib/marj_record.rb',
+  File.read('lib/marj_record.rb').sub(/VERSION = .*/, "VERSION = '#{version}'")
 )
 
 `bundle install`
@@ -92,8 +92,8 @@ fail('count not tag commit') unless $CHILD_STATUS.success?
 
 puts 'Updating version'
 File.write(
-  'app/models/marj.rb',
-  File.read('app/models/marj.rb').sub(/VERSION = .*/, "VERSION = '#{next_version}'")
+  'lib/marj_record.rb',
+  File.read('lib/marj_record.rb').sub(/VERSION = .*/, "VERSION = '#{next_version}'")
 )
 
 `bundle install`

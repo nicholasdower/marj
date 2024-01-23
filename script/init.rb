@@ -7,7 +7,7 @@ require 'awesome_print'
 require 'fileutils'
 require 'logger'
 
-(Dir.glob('lib/**/*.rb') + Dir.glob('app/**/*.rb')).each { |file| require_relative "../#{file}" }
+Dir.glob('lib/**/*.rb').each { |file| require_relative "../#{file}" }
 
 require_relative '../spec/support/test_job'
 

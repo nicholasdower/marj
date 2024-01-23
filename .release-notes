@@ -1,1 +1,1 @@
-- No change
+- Move `app/models/marj.rb` to `lib/marj_record.rb`.

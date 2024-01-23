@@ -3,7 +3,7 @@
 require 'spec_helper'
 
 describe 'LOC' do
-  loc = (Dir.glob('app/**/*.rb') + Dir.glob('lib/**/*.rb')).sum do |file|
+  loc = Dir.glob('lib/**/*.rb').sum do |file|
     File.readlines(file).select do |line|
       line.strip.match(/^ *[^ #]/)
     end.size

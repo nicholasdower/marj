@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-version = File.read('app/models/marj.rb').match(/VERSION = '([^']*)'/)[1]
+version = File.read('./lib/marj_record.rb').match(/VERSION = '([^']*)'/)[1]
 
 Gem::Specification.new do |spec|
   spec.name          = 'marj'
@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
   }
   spec.required_ruby_version = '>= 2.7.0'
 
-  spec.files = Dir['lib/**/*'] + Dir['app/**/*'] + %w[README.md LICENSE.txt]
+  spec.files = Dir['lib/**/*'] + %w[README.md LICENSE.txt]
 
   spec.add_runtime_dependency 'activejob', '>=  7.1'
   spec.add_runtime_dependency 'activerecord', '>=  7.1'

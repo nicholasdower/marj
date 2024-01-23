@@ -2,7 +2,7 @@
 
 require 'active_job'
 require 'active_record'
-require_relative '../../lib/marj_config'
+require_relative 'marj_config'
 
 # The Marj ActiveRecord model class.
 #
@@ -29,13 +29,9 @@ class Marj < ActiveRecord::Base
 
       # ActiveJob::Base#deserialize expects dates to be strings rather than Time objects.
       job_data = job_data.to_h { |k, v| [k, %w[enqueued_at scheduled_at].include?(k) ? v&.iso8601 : v] }
-      job.deserialize(job_data)
 
-      new_executions = executions + 1
-      job.perform_now.tap do
-        # If no error was raised, the job should either be destroyed (success) or updated (retryable failure).
-        raise "job #{job_id} not destroyed or updated" unless destroyed? || (executions == new_executions && !changed?)
-      end
+      job.deserialize(job_data)
+      job.perform_now
     end
   end
 
@@ -106,6 +102,7 @@ class Marj < ActiveRecord::Base
     job.singleton_class.after_perform { |_j| record.destroy! }
     job.singleton_class.after_discard { |_j, _exception| record.destroy! }
     job.singleton_class.instance_variable_set(:@__marj, record)
+
     job
   end
   private_class_method :register_callbacks
