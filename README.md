@@ -28,7 +28,17 @@ gem 'marj', '~> 1.0'
 bundle install
 ```
 
-### 2. Create the jobs table
+### 2. Configure
+
+By default, the database table will be named "jobs". To use a different table name:
+
+```ruby
+require 'marj'
+
+MarjConfig.table_name = 'some_name'
+```
+
+### 3. Create the database table
 
 ```ruby
 class CreateJobs < ActiveRecord::Migration[7.1]
@@ -57,15 +67,7 @@ class CreateJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
-To use a different table name:
-
-```ruby
-require 'marj'
-
-MarjConfig.table_name = 'some_name'
-```
-
-### 3. Configure the queue adapter
+### 4. Configure the queue adapter
 
 ```ruby
 require 'marj'
@@ -113,6 +115,19 @@ rescue Exception => e
 ensure
   sleep 5.seconds
 end
+```
+
+## Testing
+
+By default, jobs enqeued during tests will be written to the database. Enqueued jobs can be executed via:
+
+```ruby
+Marj.ready.each(&:execute)
+```
+
+Alternatively, to use [ActiveJob::QueueAdapters::TestAdapter](https://api.rubyonrails.org/classes/ActiveJob/QueueAdapters/TestAdapter.html):
+```ruby
+ActiveJob::Base.queue_adapter = :test
 ```
 
 ## Extension Examples
