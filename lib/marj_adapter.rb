@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 # ActiveJob queue adapter for Marj.
+#
+# See https://github.com/nicholasdower/marj
 class MarjAdapter
   # Enqueue a job for immediate execution.
   #

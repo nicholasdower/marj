@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 # Marj configuration.
+#
+# See https://github.com/nicholasdower/marj
 class MarjConfig
   @table_name = 'jobs'
 

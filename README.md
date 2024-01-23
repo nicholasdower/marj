@@ -1,6 +1,6 @@
 # Marj
 
-Marj is a Minimal ActiveRecord-based Jobs library.
+A minimal, database-backed queueing backend for ActiveJob.
 
 API docs: https://www.rubydoc.info/github/nicholasdower/marj <br>
 RubyGems: https://rubygems.org/gems/marj <br>
