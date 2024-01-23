@@ -19,16 +19,24 @@ console-postgres:  .install postgres-server-healthy
 	@DB=postgres ./script/console.rb
 
 .PHONY: rspec
-rspec: .install
-	@rspec
+unit: .install
+	@rspec --exclude-pattern 'spec/integration/**/*'
+
+.PHONY: rspec
+unit-sqlite: .install
+	@rspec --exclude-pattern 'spec/integration/**/*'
 
 .PHONY: rspec-mysql
-rspec-mysql: .install mysql-server-healthy
+unit-mysql: .install mysql-server-healthy
 	@DB=mysql rspec --exclude-pattern 'spec/integration/**/*'
 
 .PHONY: rspec-postgres
-rspec-postgres: .install postgres-server-healthy
+unit-postgres: .install postgres-server-healthy
 	@DB=postgres rspec --exclude-pattern 'spec/integration/**/*'
+
+.PHONY: integration
+integration: .install
+	@rspec spec/integration
 
 .PHONY: coverage
 coverage: .install
@@ -46,18 +54,21 @@ rubocop-fix: .install
 precommit: mysql-server-healthy postgres-server-healthy
 	@echo Install
 	@bundle install
-	@echo MySQL
+	@echo "Unit (MySQL)"
 	@DB=mysql rspec --format progress --exclude-pattern 'spec/integration/**/*'
-	@echo PostgreSQL
+	@echo "Unit (PostgreSQL)"
 	@DB=postgres rspec --format progress --exclude-pattern 'spec/integration/**/*'
-	@echo SQLite
-	@DB=sqlite COVERAGE=1 rspec --format progress
+	@echo "Unit (SQLite)"
+	@DB=sqlite rspec --format progress --exclude-pattern 'spec/integration/**/*'
+	@echo Integration
+	@rspec --format progress spec/integration
 	@echo Coverage
 	@DB=sqlite COVERAGE=1 rspec --format progress --exclude-pattern 'spec/integration/**/*'
 	@echo Rubocop
 	@rubocop
 	@echo Yard
-	@yard
+	@yard --fail-on-warning
+	@yard stats --list-undoc | grep '100.00% documented' > /dev/null
 
 .PHONY: clean
 clean:
@@ -122,7 +133,11 @@ release:
 
 .PHONY: doc
 doc:
-	@yard
+	@yard --fail-on-warning
+
+.PHONY: doc-check
+doc-check:
+	@yard stats --list-undoc | grep '100.00% documented' > /dev/null
 
 .PHONY: open-doc
 open-doc:

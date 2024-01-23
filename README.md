@@ -111,6 +111,9 @@ loop do
   while (record = Marj.ready.first)
     record.execute
   end
+rescue Exception => e
+  logger.error(e)
+ensure
   sleep 5.seconds
 end
 ```

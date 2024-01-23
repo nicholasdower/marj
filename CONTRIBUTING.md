@@ -7,11 +7,12 @@ Install Ruby 3.3.0.
 ## Development
 
 ```shell
-make console  # Start an interactive console
-make rspec    # Run tests
-make coverage # Generate test coverage report
-make doc      # Generate documentation
-make rubocop  # Run RuboCop
+make console     # Start an interactive console
+make unit        # Run unit tests
+make integration # Run integration tests
+make coverage    # Generate test coverage report
+make doc         # Generate documentation
+make rubocop     # Run RuboCop
 ```
 
 ## Logs
@@ -19,7 +20,7 @@ make rubocop  # Run RuboCop
 To set the log level:
 
 ```shell
-LEVEL=0 make rspec
+LEVEL=0 make unit
 LEVEL=0 make console
 ```
 
@@ -28,7 +29,7 @@ LEVEL=0 make console
 To use MySQL rather than SQLite, [install Docker](https://docs.docker.com/get-docker), then:
 
 ```shell
-make rspec-mysql
+make unit-mysql
 make console-mysql
 make mysql-client
 ```
@@ -38,7 +39,7 @@ make mysql-client
 To use PostgreSQL rather than SQLite, [install Docker](https://docs.docker.com/get-docker), then:
 
 ```shell
-make rspec-postgres
+make unit-postgres
 make console-postgres
 make postgres-client
 ```

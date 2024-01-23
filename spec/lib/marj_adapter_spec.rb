@@ -19,6 +19,20 @@ describe MarjAdapter do
       expect(Marj.last.scheduled_at.to_i).to eq(timestamp)
     end
 
+    context 'when timestamp is nil' do
+      let(:timestamp) { nil }
+
+      it 'does not set scheduled_at' do
+        subject
+        expect(job.scheduled_at).to be_nil
+      end
+
+      it 'does not persist scheduled_at' do
+        subject
+        expect(Marj.last.scheduled_at).to be_nil
+      end
+    end
+
     context 'when the job already exists' do
       before do
         job.enqueue

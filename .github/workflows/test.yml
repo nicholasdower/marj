@@ -17,7 +17,7 @@ on:
 
 jobs:
   build-lint-test-2-7-0-sqlite:
-    name: Build, Lint & Test (2.7.0, SQLite)
+    name: Build, Lint, Test (2.7.0, SQLite)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -27,10 +27,12 @@ jobs:
           ruby-version: '2.7.0'
       - name: Lint
         run: make rubocop
-      - name: Test
-        run: make rspec
-  build-lint-test-3-3-0-sqlite:
-    name: Build, Lint & Test (3.3.0, SQLite)
+      - name: Unit
+        run: make unit-sqlite
+      - name: Integration
+        run: make integration
+  build-lint-test-coverage-doc-3-3-0-sqlite:
+    name: Build, Lint, Test, Coverage, Doc (3.3.0, SQLite)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -40,10 +42,14 @@ jobs:
           ruby-version: '3.3.0'
       - name: Lint
         run: make rubocop
-      - name: Test
-        run: make rspec
-  test-3-3-0-mysql:
-    name: Test (3.3.0, MySQL)
+      - name: Unit
+        run: make unit-sqlite
+      - name: Integration
+        run: make integration
+      - name: Coverage
+        run: make coverage
+  unit-3-3-0-mysql:
+    name: Unit (3.3.0, MySQL)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -52,9 +58,9 @@ jobs:
         with:
           ruby-version: '3.3.0'
       - name: Test
-        run: make rspec-mysql
-  test-3-3-0-postgres:
-    name: Test (3.3.0, PostgreSQL)
+        run: make unit-mysql
+  unit-3-3-0-postgres:
+    name: Unit (3.3.0, PostgreSQL)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -63,4 +69,4 @@ jobs:
         with:
           ruby-version: '3.3.0'
       - name: Test
-        run: make rspec-postgres
+        run: make unit-postgres

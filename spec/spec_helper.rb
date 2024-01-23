@@ -9,6 +9,8 @@ if ENV['COVERAGE'] == '1'
   )
 
   SimpleCov.start do
+    enable_coverage :branch
+    minimum_coverage line: 100, branch: 100
     add_filter %w[script/ spec/]
   end
 end
