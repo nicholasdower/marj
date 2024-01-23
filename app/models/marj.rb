@@ -4,7 +4,7 @@ require 'active_job'
 require 'active_record'
 require_relative '../../lib/marj_config'
 
-# A minimal, database-backed queueing backend for ActiveJob.
+# The Marj ActiveRecord model class.
 #
 # See https://github.com/nicholasdower/marj
 class Marj < ActiveRecord::Base

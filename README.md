@@ -1,6 +1,8 @@
-# Marj
+# Marj (Minimal ActiveRecord Jobs)
 
-A minimal, database-backed queueing backend for ActiveJob.
+The simplest database-backed ActiveJob queueing backend.
+
+## Quick Links
 
 API docs: https://www.rubydoc.info/github/nicholasdower/marj <br>
 RubyGems: https://rubygems.org/gems/marj <br>
@@ -8,29 +10,40 @@ Changelog: https://github.com/nicholasdower/marj/releases <br>
 Issues: https://github.com/nicholasdower/marj/issues <br>
 Development: https://github.com/nicholasdower/marj/blob/master/CONTRIBUTING.md
 
-For more information on ActiveJob, see:
+## Features
 
-- https://edgeguides.rubyonrails.org/active_job_basics.html
-- https://www.rubydoc.info/gems/activejob
-- https://github.com/nicholasdower/marj/blob/master/README.md#activejob-cheatsheet
+- Enqueued jobs are written to the database.
+- Successfully executed jobs are deleted from the database.
+- Failed jobs which should be retried are updated in the database.
+- Failed jobs which should not be retried are deleted from the database.
+
+## Features Not Provided
+
+- Workers
+- Timeouts
+- Concurrency Controls
+- Observability
+- A User Interace
+- Anything else you might dream up.
+
+## Interface
+
+- `Marj` - An ActiveRecord model class
+- `Marj.ready` - Used to retrieve jobs ready to be executed
+- `Marj#execute` - Used to execute jobs retrieved from the database
+- `MarjConfig.table_name=` - Used to override the default table name
 
 ## Setup
 
 ### 1. Install
 
-Add the following to your Gemfile:
-
-```ruby
-gem 'marj', '~> 1.0'
-```
-
 ```shell
-bundle install
+bundle add marj
 ```
 
 ### 2. Configure
 
-By default, the database table will be named "jobs". To use a different table name:
+By default, the database table is named "jobs". To use a different table name:
 
 ```ruby
 require 'marj'
@@ -95,8 +108,7 @@ job.perform_now
 
 # Enqueue, retrieve and manually run a job:
 SomeJob.perform_later('foo')
-record = Marj.first
-record.execute
+Marj.first.execute
 
 # Run all ready jobs:
 Marj.ready.each(&:execute)
@@ -190,6 +202,12 @@ end
 ```
 
 ## ActiveJob Cheatsheet
+
+For more information on ActiveJob, see:
+
+- https://edgeguides.rubyonrails.org/active_job_basics.html
+- https://www.rubydoc.info/gems/activejob
+- https://github.com/nicholasdower/marj/blob/master/README.md#activejob-cheatsheet
 
 ### Configuring a Queue Adapter
 

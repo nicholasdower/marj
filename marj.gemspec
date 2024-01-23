@@ -4,8 +4,8 @@ version = File.read('app/models/marj.rb').match(/VERSION = '([^']*)'/)[1]
 
 Gem::Specification.new do |spec|
   spec.name          = 'marj'
-  spec.description   = 'A minimal, database-backed queueing backend for ActiveJob.'
-  spec.summary       = spec.description
+  spec.description   = 'Marj (Minimal ActiveRecord Jobs): The simplest database-backed ActiveJob queueing backend.'
+  spec.summary       = 'Minimal ActiveRecord Jobs'
   spec.homepage      = 'https://github.com/nicholasdower/marj'
   spec.version       = version
   spec.license       = 'MIT'
