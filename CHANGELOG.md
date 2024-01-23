@@ -1,3 +1,7 @@
+## 2.0.1
+
+- Move `app/models/marj.rb` to `lib/marj_record.rb`.
+
 ## 2.0.0
 
 - Rename `Marj.available` to `Marj.ready`.
