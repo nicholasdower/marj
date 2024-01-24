@@ -1,1 +1,1 @@
-- No change
+- Fixed a bug to support the case where a job is enqueued, deleted, then reenqueued via a reference to the existing job instance.

@@ -290,6 +290,8 @@ SomeJob.perform_now(args)
 SomeJob.new(args).enqueue
 SomeJob.new(args).enqueue(options)
 
+SomeJob.perform_later(SomeJob.new(args))
+
 SomeJob.perform_later(args)
 SomeJob.set(options).perform_later(args)
 

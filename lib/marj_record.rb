@@ -93,14 +93,18 @@ class Marj < ActiveRecord::Base
   # @param job [ActiveJob::Base]
   # @return [ActiveJob::Base]
   def self.register_callbacks(job, record)
-    raise 'callbacks already registered' if job.singleton_class.instance_variable_get(:@__marj)
+    if job.singleton_class.instance_variable_get(:@__marj)
+      # Callbacks already registered. We just need to update the record.
+      job.singleton_class.instance_variable_set(:@__marj, record)
+      return
+    end
 
     # We need to detect three cases:
     #  - If a job succeeds, after_perform will be called.
     #  - If a job fails and should be retried, enqueue will be called. This is handled by the enqueue method.
     #  - If a job exceeds its max attempts, after_discard will be called.
-    job.singleton_class.after_perform { |_j| record.destroy! }
-    job.singleton_class.after_discard { |_j, _exception| record.destroy! }
+    job.singleton_class.after_perform { |_j| job.singleton_class.instance_variable_get(:@__marj).destroy! }
+    job.singleton_class.after_discard { |_j, _exception| job.singleton_class.instance_variable_get(:@__marj).destroy! }
     job.singleton_class.instance_variable_set(:@__marj, record)
 
     job
@@ -121,19 +125,28 @@ class Marj < ActiveRecord::Base
     # registered on the job instance so that when the job is executed, the database record is deleted or updated
     # (depending on the result).
     #
-    # There are three cases:
+    # There are two normal cases:
     #  - The first time a job is enqueued, we need to create the record and register callbacks.
     #  - If a previously enqueued job instance is re-enqueued, for instance after execution fails, callbacks have
     #    already been registered. In this case we only need to update the record.
-    #  - It is also possible for new job instance to be created for a job that is already in the database. In this case
-    #    we need to update the record and register callbacks.
     #
     # We keep track of whether callbacks have been registered by setting the @__marj instance variable on the job's
     # singleton class. This holds a reference to the record. This allows us to update the record without re-fetching it
     # and also ensures that if execute is called on a record any updates to the database are reflected on that record
     # instance.
+    #
+    # There are also two edge cases:
+    #  - It is possible for new job instance to be created for a job that is already in the database. In this case
+    #    we need to update the record and register callbacks.
+    #  - It is possible for the underlying row corresponding to an existing job to have been deleted. In this case we
+    #    need to create a new record and update the reference on the job's singleton class.
     if (record = job.singleton_class.instance_variable_get(:@__marj))
-      record.update!(serialized)
+      if Marj.exists?(job_id: job.job_id)
+        record.update!(serialized)
+      else
+        record = Marj.create!(serialized)
+        register_callbacks(job, record)
+      end
     else
       record = Marj.find_or_create_by!(job_id: job.job_id) { _1.assign_attributes(serialized) }
       register_callbacks(job, record)
