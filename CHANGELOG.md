@@ -1,3 +1,7 @@
+## 2.1.0
+
+- Fixed a bug to support the case where a job is enqueued, deleted, then reenqueued via a reference to the existing job instance.
+
 ## 2.0.1
 
 - Move `app/models/marj.rb` to `lib/marj_record.rb`.
