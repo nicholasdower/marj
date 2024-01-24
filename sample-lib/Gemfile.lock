@@ -1,7 +1,7 @@
 PATH
   remote: ..
   specs:
-    marj (2.1.0)
+    marj (3.0.0.pre)
       activejob (>= 7.1)
       activerecord (>= 7.1)
 
@@ -59,7 +59,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  marj (= 2.1.0)!
+  marj (= 3.0.0.pre)!
   sqlite3 (~> 1.4)
 
 BUNDLED WITH
