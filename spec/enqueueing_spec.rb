@@ -1,19 +1,19 @@
 # frozen_string_literal: true
 
-require_relative '../spec_helper'
+require_relative 'spec_helper'
 
-describe 'Marj Enqueueing' do
+describe 'Enqueueing' do
   describe '#perform_later' do
     context 'when a new job instance is enqueued' do
       subject { TestJob.perform_later('1') }
 
       it 'inserts a database record' do
-        expect { subject }.to change(Marj, :count).from(0).to(1)
+        expect { subject }.to change(MarjRecord, :count).from(0).to(1)
       end
 
       it 'persists the job arguments' do
         subject
-        expect(Marj.last.arguments.first).to eq('1')
+        expect(MarjRecord.last.arguments.first).to eq('1')
       end
     end
 
@@ -25,7 +25,7 @@ describe 'Marj Enqueueing' do
       before { job.queue_name = 'bar' }
 
       it 'updates the record' do
-        expect { subject }.to change { Marj.last.queue_name }.from('foo').to('bar')
+        expect { subject }.to change { MarjRecord.last.queue_name }.from('foo').to('bar')
       end
     end
 
@@ -38,7 +38,7 @@ describe 'Marj Enqueueing' do
       before { new_job.deserialize(old_job.serialize.merge('queue_name' => 'bar')) }
 
       it 'updates the record' do
-        expect { subject }.to change { Marj.last.queue_name }.from('foo').to('bar')
+        expect { subject }.to change { MarjRecord.last.queue_name }.from('foo').to('bar')
       end
     end
 
@@ -49,16 +49,16 @@ describe 'Marj Enqueueing' do
 
       before do
         job
-        Marj.delete_all
+        MarjRecord.delete_all
       end
 
       it 'inserts a database record' do
-        expect { subject }.to change(Marj, :count).from(0).to(1)
+        expect { subject }.to change(MarjRecord, :count).from(0).to(1)
       end
 
       it 'persists the job arguments' do
         subject
-        expect(Marj.last.arguments.first).to eq('1')
+        expect(MarjRecord.last.arguments.first).to eq('1')
       end
     end
   end
@@ -73,7 +73,7 @@ describe 'Marj Enqueueing' do
 
       it 'persists the job arguments' do
         subject
-        expect(Marj.last.arguments.first).to eq('1')
+        expect(MarjRecord.last.arguments.first).to eq('1')
       end
     end
 
@@ -85,7 +85,7 @@ describe 'Marj Enqueueing' do
       before { job.queue_name = 'bar' }
 
       it 'updates the record' do
-        expect { subject }.to change { Marj.last.queue_name }.from('foo').to('bar')
+        expect { subject }.to change { MarjRecord.last.queue_name }.from('foo').to('bar')
       end
     end
 
@@ -98,7 +98,7 @@ describe 'Marj Enqueueing' do
       before { new_job.deserialize(old_job.serialize.merge('queue_name' => 'bar')) }
 
       it 'updates the record' do
-        expect { subject }.to change { Marj.last.queue_name }.from('foo').to('bar')
+        expect { subject }.to change { MarjRecord.last.queue_name }.from('foo').to('bar')
       end
     end
 
@@ -109,16 +109,16 @@ describe 'Marj Enqueueing' do
 
       before do
         job
-        Marj.delete_all
+        MarjRecord.delete_all
       end
 
       it 'inserts a database record' do
-        expect { subject }.to change(Marj, :count).from(0).to(1)
+        expect { subject }.to change(MarjRecord, :count).from(0).to(1)
       end
 
       it 'persists the job arguments' do
         subject
-        expect(Marj.last.arguments.first).to eq('1')
+        expect(MarjRecord.last.arguments.first).to eq('1')
       end
     end
   end

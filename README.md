@@ -26,22 +26,19 @@ Development: https://github.com/nicholasdower/marj/blob/master/CONTRIBUTING.md
 - A User Interace
 - Anything else you might dream up.
 
-## Interface
-
-- `Marj` - An ActiveRecord model class
-- `Marj.ready` - Used to retrieve jobs ready to be executed
-- `Marj#execute` - Used to execute jobs retrieved from the database
-- `MarjConfig.table_name=` - Used to override the default table name
-
 ## Setup
 
 ### 1. Install
 
 ```shell
+bundle add activejob
+bundle add activerecord
 bundle add marj
 
 # or
 
+gem install activejob
+gem install activerecord
 gem install marj
 ```
 
@@ -52,7 +49,7 @@ By default, the database table is named "jobs". To use a different table name:
 ```ruby
 require 'marj'
 
-MarjConfig.table_name = 'some_name'
+Marj.table_name = 'some_name'
 ```
 
 ### 3. Create the database table
@@ -97,7 +94,7 @@ end
 # Without Rails:
 ActiveJob::Base.queue_adapter = :marj
 
-# Or for specific jobs (with or without Rails):
+# With or without Rails for a single job class:
 class SomeJob < ActiveJob::Base
   self.queue_adapter = :marj
 end
@@ -112,20 +109,20 @@ job.perform_now
 
 # Enqueue, retrieve and manually run a job:
 SomeJob.perform_later('foo')
-Marj.first.execute
+Marj.first.perform_now
 
 # Run all ready jobs:
-Marj.ready.each(&:execute)
+Marj.ready.perform_all
 
 # Run all ready jobs, querying each time:
-loop { Marj.ready.first&.tap(&:execute) || break }
+loop { Marj.ready.first&.tap(&:perform_now) || break }
 
 # Run all ready jobs in a specific queue:
-loop { Marj.where(queue_name: 'foo').ready.first&.tap(&:execute) || break }
+loop { Marj.where(queue_name: 'foo').ready.first&.tap(&:perform_now) || break }
 
 # Run jobs as they become ready:
 loop do
-  loop { Marj.ready.first&.tap(&:execute) || break }
+  loop { Marj.ready.first&..tap(&:perform_now) || break }
 rescue Exception => e
   logger.error(e)
 ensure
@@ -138,7 +135,7 @@ end
 By default, jobs enqeued during tests will be written to the database. Enqueued jobs can be executed via:
 
 ```ruby
-Marj.ready.each(&:execute)
+Marj.ready.each(&:perform_now)
 ```
 
 Alternatively, to use [ActiveJob::QueueAdapters::TestAdapter](https://api.rubyonrails.org/classes/ActiveJob/QueueAdapters/TestAdapter.html):

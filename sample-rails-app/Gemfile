@@ -2,7 +2,7 @@
 
 source 'https://rubygems.org'
 
-marj_version = File.read('../lib/marj_record.rb').match(/VERSION = '([^']*)'/)[1]
+marj_version = File.read('../lib/marj.rb').match(/VERSION = '([^']*)'/)[1]
 
 gem 'marj', marj_version, path: '../'
 gem 'rails', '~> 7.1.3'

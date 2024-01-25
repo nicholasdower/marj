@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative '../spec_helper'
+require_relative 'spec_helper'
 
-describe 'Marj Serialization' do
+describe 'Record Serialization' do
   describe '#arguments' do
     context 'deserialize' do
-      subject { Marj.first.arguments }
+      subject { MarjRecord.first.arguments }
 
       before do
         TestJob.perform_later(Time.now, 1, 'foo')
@@ -22,31 +22,31 @@ describe 'Marj Serialization' do
     context 'serialization' do
       it 'serializes the arguments' do
         TestJob.perform_later
-        Marj.first.update!(arguments: [Time.now, 1, 'foo'])
-        expect(Marj.first.arguments).to be_a(Array)
-        expect(Marj.first.arguments[0]).to be_a(Time)
-        expect(Marj.first.arguments[1]).to be_a(Integer)
-        expect(Marj.first.arguments[2]).to be_a(String)
+        MarjRecord.first.update!(arguments: [Time.now, 1, 'foo'])
+        expect(MarjRecord.first.arguments).to be_a(Array)
+        expect(MarjRecord.first.arguments[0]).to be_a(Time)
+        expect(MarjRecord.first.arguments[1]).to be_a(Integer)
+        expect(MarjRecord.first.arguments[2]).to be_a(String)
       end
 
       it 'allows already serialized arguments' do
         TestJob.perform_later
-        Marj.first.update!(arguments: '[1, "foo"]')
-        expect(Marj.first.arguments).to be_a(Array)
-        expect(Marj.first.arguments[0]).to be_a(Integer)
-        expect(Marj.first.arguments[1]).to be_a(String)
+        MarjRecord.first.update!(arguments: '[1, "foo"]')
+        expect(MarjRecord.first.arguments).to be_a(Array)
+        expect(MarjRecord.first.arguments[0]).to be_a(Integer)
+        expect(MarjRecord.first.arguments[1]).to be_a(String)
       end
 
       it 'raises on unexpected arguments' do
         TestJob.perform_later
-        expect { Marj.first.update!(arguments: 1) }.to raise_error(StandardError, 'invalid arguments: 1')
+        expect { MarjRecord.first.update!(arguments: 1) }.to raise_error(StandardError, 'invalid arguments: 1')
       end
     end
   end
 
   describe '#exception_executions' do
     context 'deserialize' do
-      subject { Marj.first.exception_executions }
+      subject { MarjRecord.first.exception_executions }
 
       before do
         job = TestJob.new
@@ -60,7 +60,7 @@ describe 'Marj Serialization' do
     end
 
     context 'serialization' do
-      subject { Marj.first.update!(exception_executions: { '[Foo]' => 2 }) }
+      subject { MarjRecord.first.update!(exception_executions: { '[Foo]' => 2 }) }
 
       before do
         TestJob.perform_later
@@ -68,14 +68,14 @@ describe 'Marj Serialization' do
 
       it 'deserializes the job_class' do
         subject
-        expect(Marj.first.exception_executions).to eq({ '[Foo]' => 2 })
+        expect(MarjRecord.first.exception_executions).to eq({ '[Foo]' => 2 })
       end
     end
   end
 
   describe '#job_class' do
     context 'deserialize' do
-      subject { Marj.first.job_class }
+      subject { MarjRecord.first.job_class }
 
       before do
         TestJob.perform_later(Time.now, 1, 'foo')
@@ -89,13 +89,13 @@ describe 'Marj Serialization' do
     context 'serialization' do
       it 'deserializes the job_class' do
         TestJob.perform_later
-        Marj.first.update!(job_class: String)
-        expect(Marj.first.job_class).to eq(String)
+        MarjRecord.first.update!(job_class: String)
+        expect(MarjRecord.first.job_class).to eq(String)
       end
 
       it 'raises on unexpected job_class' do
         TestJob.perform_later
-        expect { Marj.first.update!(job_class: 1) }.to raise_error(StandardError, 'invalid class: 1')
+        expect { MarjRecord.first.update!(job_class: 1) }.to raise_error(StandardError, 'invalid class: 1')
       end
     end
   end

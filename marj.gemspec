@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-version = File.read('./lib/marj_record.rb').match(/VERSION = '([^']*)'/)[1]
+version = File.read('./lib/marj.rb').match(/VERSION = '([^']*)'/)[1]
 
 Gem::Specification.new do |spec|
   spec.name          = 'marj'

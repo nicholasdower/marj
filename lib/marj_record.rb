@@ -2,26 +2,12 @@
 
 require 'active_job'
 require 'active_record'
-require_relative 'marj_config'
+require_relative 'marj'
 
 # The Marj ActiveRecord model class.
 #
 # See https://github.com/nicholasdower/marj
-class Marj < ActiveRecord::Base
-  # The Marj version.
-  VERSION = '3.0.0.pre'
-
-  # Executes the job associated with this record and returns the result.
-  def execute
-    # Normally we would call ActiveJob::Base#execute which has the following implementation:
-    #   ActiveJob::Callbacks.run_callbacks(:execute) do
-    #     job = deserialize(job_data)
-    #     job.perform_now
-    #   end
-    # However, we need to instantiate the job ourselves in order to register callbacks before execution.
-    ActiveJob::Callbacks.run_callbacks(:execute) { job.perform_now }
-  end
-
+class MarjRecord < ActiveRecord::Base
   # Returns an ActiveRecord::Relation scope for enqueued jobs with a +scheduled_at+ that is either +null+ or in the
   # past. Jobs are ordered by +priority+ (+null+ last), then +scheduled_at+ (+null+ last), then +enqueued_at+.
   #
@@ -36,7 +22,27 @@ class Marj < ActiveRecord::Base
     )
   end
 
-  self.table_name = MarjConfig.table_name
+  # Returns a job object for this record which will update the database when successfully executed, enqueued or
+  # discarded.
+  #
+  # @return [ActiveJob::Base]
+  def job
+    return @job if @job
+
+    # See register_callbacks for details on how callbacks are used.
+    @job = job_class.new.tap { MarjRecord.send(:register_callbacks, _1, self) }
+
+    # ActiveJob::Base#deserialize expects serialized arguments. But the record arguments have already been
+    # deserialized by a custom ActiveRecord serializer (see below). So instead we use the raw arguments string.
+    job_data = attributes.merge('arguments' => JSON.parse(read_attribute_before_type_cast(:arguments)))
+
+    # ActiveJob::Base#deserialize expects dates to be strings rather than Time objects.
+    job_data = job_data.to_h { |k, v| [k, %w[enqueued_at scheduled_at].include?(k) ? v&.iso8601 : v] }
+
+    @job.tap { @job.deserialize(job_data) }
+  end
+
+  self.table_name = Marj.table_name
 
   # Order by +enqueued_at+ rather than +job_id+ (the default)
   self.implicit_order_column = 'enqueued_at'
@@ -46,8 +52,8 @@ class Marj < ActiveRecord::Base
 
   # Using a custom serializer for arguments so that we can interact with as an array rather than a string.
   # This enables code like:
-  #   Marj.first.arguments.first
-  #   Marj.first.update!(arguments: ['foo', 1, Time.now])
+  #   MarjRecord.first.arguments.first
+  #   MarjRecord.first.update!(arguments: ['foo', 1, Time.now])
   serialize(:arguments, coder: Class.new do
     def self.dump(arguments)
       return ActiveJob::Arguments.serialize(arguments).to_json if arguments.is_a?(Array)
@@ -113,48 +119,27 @@ class Marj < ActiveRecord::Base
     # instance, any updates to the database are reflected on that record instance.
     if (existing_record = job.singleton_class.instance_variable_get(:@__marj))
       # This job instance has already been associated with a database row.
-      if Marj.exists?(job_id: job.job_id)
+      if MarjRecord.exists?(job_id: job.job_id)
         # The database row still exists, we simply need to update it.
         existing_record.update!(serialized)
       else
         # Someone else deleted the database row, we need to recreate and reload the existing record instance. We don't
         # want to register the new instance because someone might still have a reference to the existing one.
-        Marj.create!(serialized)
+        MarjRecord.create!(serialized)
         existing_record.reload
       end
     else
       # This job instance has not been associated with a database row.
-      if (new_record = Marj.find_by(job_id: job.job_id))
+      if (new_record = MarjRecord.find_by(job_id: job.job_id))
         # The database row already exists. Update it.
         new_record.update!(serialized)
       else
         # The database row does not exist. Create it.
-        new_record = Marj.create!(serialized)
+        new_record = MarjRecord.create!(serialized)
       end
       register_callbacks(job, new_record)
     end
     job
   end
   private_class_method :enqueue
-
-  private
-
-  # Returns a job object for this record which will update the database when successfully executed, enqueued or
-  # discarded.
-  #
-  # @return [ActiveJob::Base]
-  def job
-    # See register_callbacks for details on how callbacks are used.
-    job = job_class.new.tap { Marj.send(:register_callbacks, _1, self) }
-
-    # ActiveJob::Base#deserialize expects serialized arguments. But the record arguments have already been
-    # deserialized by a custom ActiveRecord serializer (see below). So instead we use the raw arguments string.
-    job_data = attributes.merge('arguments' => JSON.parse(read_attribute_before_type_cast(:arguments)))
-
-    # ActiveJob::Base#deserialize expects dates to be strings rather than Time objects.
-    job_data = job_data.to_h { |k, v| [k, %w[enqueued_at scheduled_at].include?(k) ? v&.iso8601 : v] }
-
-    job.deserialize(job_data)
-    job
-  end
 end
