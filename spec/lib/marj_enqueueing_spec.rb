@@ -17,12 +17,25 @@ describe 'Marj Enqueueing' do
       end
     end
 
-    context 'when an updated job instance is enqueued' do
+    context 'when an existing, updated job instance which references an existing record is enqueued' do
       subject { TestJob.perform_later(job) }
 
       let(:job) { TestJob.set(queue: 'foo').perform_later('1') }
 
       before { job.queue_name = 'bar' }
+
+      it 'updates the record' do
+        expect { subject }.to change { Marj.last.queue_name }.from('foo').to('bar')
+      end
+    end
+
+    context 'when a new, updated job instance which references an existing record is enqueued' do
+      subject { TestJob.perform_later(new_job) }
+
+      let(:old_job) { TestJob.set(queue: 'foo').perform_later('1') }
+      let(:new_job) { TestJob.new }
+
+      before { new_job.deserialize(old_job.serialize.merge('queue_name' => 'bar')) }
 
       it 'updates the record' do
         expect { subject }.to change { Marj.last.queue_name }.from('foo').to('bar')
@@ -64,12 +77,25 @@ describe 'Marj Enqueueing' do
       end
     end
 
-    context 'when an updated job instance is enqueued' do
+    context 'when an existing, updated job instance which references an existing record is enqueued' do
       subject { job.enqueue }
 
       let(:job) { TestJob.set(queue: 'foo').perform_later('1') }
 
       before { job.queue_name = 'bar' }
+
+      it 'updates the record' do
+        expect { subject }.to change { Marj.last.queue_name }.from('foo').to('bar')
+      end
+    end
+
+    context 'when a new, updated job instance which references an existing record is enqueued' do
+      subject { new_job.enqueue }
+
+      let(:old_job) { TestJob.set(queue: 'foo').perform_later('1') }
+      let(:new_job) { TestJob.new }
+
+      before { new_job.deserialize(old_job.serialize.merge('queue_name' => 'bar')) }
 
       it 'updates the record' do
         expect { subject }.to change { Marj.last.queue_name }.from('foo').to('bar')

@@ -19,20 +19,7 @@ class Marj < ActiveRecord::Base
     #     job.perform_now
     #   end
     # However, we need to instantiate the job ourselves in order to register callbacks before execution.
-    ActiveJob::Callbacks.run_callbacks(:execute) do
-      # See register_callbacks for details on how callbacks are used.
-      job = job_class.new.tap { Marj.send(:register_callbacks, _1, self) }
-
-      # ActiveJob::Base#deserialize expects serialized arguments. But the record arguments have already been
-      # deserialized by a custom ActiveRecord serializer (see below). So instead we use the raw arguments string.
-      job_data = attributes.merge('arguments' => JSON.parse(read_attribute_before_type_cast(:arguments)))
-
-      # ActiveJob::Base#deserialize expects dates to be strings rather than Time objects.
-      job_data = job_data.to_h { |k, v| [k, %w[enqueued_at scheduled_at].include?(k) ? v&.iso8601 : v] }
-
-      job.deserialize(job_data)
-      job.perform_now
-    end
+    ActiveJob::Callbacks.run_callbacks(:execute) { job.perform_now }
   end
 
   # Returns an ActiveRecord::Relation scope for enqueued jobs with a +scheduled_at+ that is either +null+ or in the
@@ -93,18 +80,14 @@ class Marj < ActiveRecord::Base
   # @param job [ActiveJob::Base]
   # @return [ActiveJob::Base]
   def self.register_callbacks(job, record)
-    if job.singleton_class.instance_variable_get(:@__marj)
-      # Callbacks already registered. We just need to update the record.
-      job.singleton_class.instance_variable_set(:@__marj, record)
-      return
-    end
+    raise 'callbacks already registered' if job.singleton_class.instance_variable_get(:@__marj)
 
     # We need to detect three cases:
     #  - If a job succeeds, after_perform will be called.
     #  - If a job fails and should be retried, enqueue will be called. This is handled by the enqueue method.
     #  - If a job exceeds its max attempts, after_discard will be called.
-    job.singleton_class.after_perform { |_j| job.singleton_class.instance_variable_get(:@__marj).destroy! }
-    job.singleton_class.after_discard { |_j, _exception| job.singleton_class.instance_variable_get(:@__marj).destroy! }
+    job.singleton_class.after_perform { |_j| record.destroy! }
+    job.singleton_class.after_discard { |_j, _exception| record.destroy! }
     job.singleton_class.instance_variable_set(:@__marj, record)
 
     job
@@ -125,33 +108,53 @@ class Marj < ActiveRecord::Base
     # registered on the job instance so that when the job is executed, the database record is deleted or updated
     # (depending on the result).
     #
-    # There are two normal cases:
-    #  - The first time a job is enqueued, we need to create the record and register callbacks.
-    #  - If a previously enqueued job instance is re-enqueued, for instance after execution fails, callbacks have
-    #    already been registered. In this case we only need to update the record.
-    #
     # We keep track of whether callbacks have been registered by setting the @__marj instance variable on the job's
-    # singleton class. This holds a reference to the record. This allows us to update the record without re-fetching it
-    # and also ensures that if execute is called on a record any updates to the database are reflected on that record
-    # instance.
-    #
-    # There are also two edge cases:
-    #  - It is possible for new job instance to be created for a job that is already in the database. In this case
-    #    we need to update the record and register callbacks.
-    #  - It is possible for the underlying row corresponding to an existing job to have been deleted. In this case we
-    #    need to create a new record and update the reference on the job's singleton class.
-    if (record = job.singleton_class.instance_variable_get(:@__marj))
+    # singleton class. This holds a reference to the record. This ensures that if execute is called on a record
+    # instance, any updates to the database are reflected on that record instance.
+    if (existing_record = job.singleton_class.instance_variable_get(:@__marj))
+      # This job instance has already been associated with a database row.
       if Marj.exists?(job_id: job.job_id)
-        record.update!(serialized)
+        # The database row still exists, we simply need to update it.
+        existing_record.update!(serialized)
       else
-        record = Marj.create!(serialized)
-        register_callbacks(job, record)
+        # Someone else deleted the database row, we need to recreate and reload the existing record instance. We don't
+        # want to register the new instance because someone might still have a reference to the existing one.
+        Marj.create!(serialized)
+        existing_record.reload
       end
     else
-      record = Marj.find_or_create_by!(job_id: job.job_id) { _1.assign_attributes(serialized) }
-      register_callbacks(job, record)
+      # This job instance has not been associated with a database row.
+      if (new_record = Marj.find_by(job_id: job.job_id))
+        # The database row already exists. Update it.
+        new_record.update!(serialized)
+      else
+        # The database row does not exist. Create it.
+        new_record = Marj.create!(serialized)
+      end
+      register_callbacks(job, new_record)
     end
     job
   end
   private_class_method :enqueue
+
+  private
+
+  # Returns a job object for this record which will update the database when successfully executed, enqueued or
+  # discarded.
+  #
+  # @return [ActiveJob::Base]
+  def job
+    # See register_callbacks for details on how callbacks are used.
+    job = job_class.new.tap { Marj.send(:register_callbacks, _1, self) }
+
+    # ActiveJob::Base#deserialize expects serialized arguments. But the record arguments have already been
+    # deserialized by a custom ActiveRecord serializer (see below). So instead we use the raw arguments string.
+    job_data = attributes.merge('arguments' => JSON.parse(read_attribute_before_type_cast(:arguments)))
+
+    # ActiveJob::Base#deserialize expects dates to be strings rather than Time objects.
+    job_data = job_data.to_h { |k, v| [k, %w[enqueued_at scheduled_at].include?(k) ? v&.iso8601 : v] }
+
+    job.deserialize(job_data)
+    job
+  end
 end
