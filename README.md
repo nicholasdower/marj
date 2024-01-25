@@ -286,17 +286,23 @@ SomeJob.perform_now(args)
 
 ### Enqueueing Jobs
 
+Jobs are enqueued via the `ActiveJob::Base#enqueue` method. This method returns the job on
+success. If an error is raised during enqueueing, that error will propagate to the caller,
+unless the error is an `ActiveJob::EnqueueError`. In this case, `enqueue` will return `false`
+and `job.enqueue_error` will be set.
+
 ```ruby
 SomeJob.new(args).enqueue
 SomeJob.new(args).enqueue(options)
 
+# Via perform_later
 SomeJob.perform_later(SomeJob.new(args))
-
 SomeJob.perform_later(args)
 SomeJob.set(options).perform_later(args)
 
-# Enqueued on failure
+# After a failure during execution
 SomeJob.perform_now(args)
+ActiveJob::Base.execute(SomeJob.new(args).serialize)
 
 # Enqueue multiple
 ActiveJob.perform_all_later(SomeJob.new, SomeJob.new)
