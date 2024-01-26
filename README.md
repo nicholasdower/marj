@@ -86,6 +86,7 @@ and discard enqueued jobs. It deals with `ActiveJob` objects rather than
 
 ```ruby
 Marj::Jobs.all         # Returns all enqueued jobs.
+Marj::Jobs.queue       # Returns jobs in the specified queue(s).
 Marj::Jobs.ready       # Returns jobs which are ready to be executed.
 Marj::Jobs.first       # Returns the first job(s) by enqueued_at.
 Marj::Jobs.last        # Returns the last job(s) by enqueued_at.
@@ -96,8 +97,9 @@ Marj::Jobs.discard_all # Discards all jobs.
 Marj::Jobs.discard     # Discards the specified job.
 ```
 
-`all`, `ready` and `where` return a `Marj::Relation` which provides the same
-query methods as `Marj::Jobs`. This can be used to chain query methods like:
+`all`, `queue`, `ready` and `where` return a `Marj::Relation` which provides
+the same query methods as `Marj::Jobs`. This can be used to chain query methods
+like:
 
 ```ruby
 Marj::Jobs.where(job_class: SomeJob).ready.first
@@ -144,7 +146,7 @@ Marj::Jobs.ready.perform_all
 Marj::Jobs.ready.perform_all(batch_size: 1)
 
 # Run all ready jobs in a specific queue:
-Marj::Jobs.where(queue_name: 'foo').ready.perform_all
+Marj::Jobs.queue('foo').ready.perform_all
 
 # Run jobs indefinitely, as they become ready:
 loop do

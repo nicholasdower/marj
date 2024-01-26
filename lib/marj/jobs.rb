@@ -39,6 +39,15 @@ module Marj
         Marj::Relation.new(Marj::Record.all)
       end
 
+      # Returns a {Marj::Relation} for jobs in the specified queue(s).
+      #
+      # @param queue [String, Symbol] the queue to query
+      # @param queues [Array<String>, Array<Symbol>] more queues to query
+      # @return [Marj::Relation]
+      def queue(queue, *queues)
+        all.queue(queue, *queues)
+      end
+
       # Returns the first enqueued job or the first N enqueued jobs if +limit+ is specified. If no jobs are enqueued,
       # returns +nil+.
       #

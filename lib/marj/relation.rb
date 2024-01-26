@@ -10,6 +10,15 @@ module Marj
       @ar_relation = ar_relation
     end
 
+    # Returns a {Marj::Relation} for jobs in the specified queue(s).
+    #
+    # @param queue [String, Symbol] the queue to query
+    # @param queues [Array<String, Array<Symbol>] more queues to query
+    # @return [Marj::Relation]
+    def queue(queue, *queues)
+      Marj::Relation.new(@ar_relation.where(queue_name: queues.dup.unshift(queue)))
+    end
+
     # Returns the first job in the relation or the first N jobs if +limit+ is specified. If no jobs are in the relation,
     # returns +nil+.
     #
