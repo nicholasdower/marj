@@ -9,8 +9,9 @@
 /coverage
 /doc
 /logs
-/sample-rails-app/tmp
-/sample-rails-app/storage
-/sample-rails-app/log
-/sample-lib/tmp
 /sample-lib/storage
+/sample-lib/tmp
+/sample-rails-app/log
+/sample-rails-app/storage
+/sample-rails-app/tmp
+/todo
