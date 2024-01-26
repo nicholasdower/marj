@@ -31,7 +31,7 @@ describe 'ActiveJob Hooks' do
     it 'invokes all hooks' do
       TestJob.perform_later('1')
       TestJob.log.clear
-      Marj.last.perform_now
+      Marj::Jobs.last.perform_now
       expect(TestJob.log).to eq(%i[before_perform around_perform_start around_perform_end after_perform])
     end
   end
@@ -40,7 +40,7 @@ describe 'ActiveJob Hooks' do
     it 'invokes all hooks' do
       TestJob.perform_later('1')
       TestJob.log.clear
-      ActiveJob::Base.execute(Marj.last.serialize)
+      ActiveJob::Base.execute(Marj::Jobs.last.serialize)
       expect(TestJob.log).to eq(%i[execute before_perform around_perform_start around_perform_end after_perform])
     end
   end
@@ -60,7 +60,7 @@ describe 'ActiveJob Hooks' do
     it 'invokes all hooks' do
       TestJob.perform_later('raise "hi"')
       TestJob.log.clear
-      Marj.last.perform_now
+      Marj::Jobs.last.perform_now
       expect(TestJob.log).to eq(
         %i[
           before_perform around_perform_start before_enqueue
@@ -74,7 +74,7 @@ describe 'ActiveJob Hooks' do
     it 'invokes all hooks' do
       TestJob.perform_later('raise "hi"')
       TestJob.log.clear
-      ActiveJob::Base.execute(Marj.last.serialize)
+      ActiveJob::Base.execute(Marj::Jobs.last.serialize)
       expect(TestJob.log).to eq(
         %i[
           execute before_perform around_perform_start before_enqueue
@@ -97,7 +97,7 @@ describe 'ActiveJob Hooks' do
   context 'when perform_now fails and the job is discarded' do
     it 'invokes all hooks' do
       TestJob.perform_later('raise "hi"')
-      record = Marj.last
+      record = Marj::Jobs.last
       record.perform_now
       TestJob.log.clear
       record.perform_now rescue nil
@@ -108,9 +108,9 @@ describe 'ActiveJob Hooks' do
   context 'when execute fails and the job is discarded' do
     it 'invokes all hooks' do
       TestJob.perform_later('raise "hi"')
-      ActiveJob::Base.execute(Marj.last.serialize)
+      ActiveJob::Base.execute(Marj::Jobs.last.serialize)
       TestJob.log.clear
-      ActiveJob::Base.execute(Marj.last.serialize) rescue nil
+      ActiveJob::Base.execute(Marj::Jobs.last.serialize) rescue nil
       expect(TestJob.log).to eq(%i[execute before_perform around_perform_start after_discard])
     end
   end

@@ -7,7 +7,7 @@ class MarjAdapter
   # Creates a new adapter which will enqueue jobs using the given +ActiveRecord+ model class.
   #
   # @param record_class [Class, String] the +ActiveRecord+ model class (or its name) to use to store jobs
-  def initialize(record_class = 'MarjRecord')
+  def initialize(record_class = 'Marj::Record')
     @record_class = record_class
   end
 

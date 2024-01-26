@@ -99,20 +99,20 @@ job.perform_now
 
 # Enqueue, retrieve and manually run a job:
 SomeJob.perform_later('foo')
-Marj.first.perform_now
+Marj::Jobs.first.perform_now
 
 # Run all ready jobs:
-Marj.ready.perform_all
+Marj::Jobs.ready.perform_all
 
 # Run all ready jobs, querying each time:
-loop { Marj.ready.first&.tap(&:perform_now) || break }
+loop { Marj::Jobs.ready.first&.tap(&:perform_now) || break }
 
 # Run all ready jobs in a specific queue:
-loop { Marj.where(queue_name: 'foo').ready.first&.tap(&:perform_now) || break }
+loop { Marj::Jobs.where(queue_name: 'foo').ready.first&.tap(&:perform_now) || break }
 
 # Run jobs as they become ready:
 loop do
-  loop { Marj.ready.first&..tap(&:perform_now) || break }
+  loop { Marj::Jobs.ready.first&..tap(&:perform_now) || break }
 rescue Exception => e
   logger.error(e)
 ensure
@@ -125,7 +125,7 @@ end
 By default, jobs enqeued during tests will be written to the database. Enqueued jobs can be executed via:
 
 ```ruby
-Marj.ready.each(&:perform_now)
+Marj::Jobs.ready.each(&:perform_now)
 ```
 
 Alternatively, to use [ActiveJob::QueueAdapters::TestAdapter](https://api.rubyonrails.org/classes/ActiveJob/QueueAdapters/TestAdapter.html):

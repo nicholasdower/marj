@@ -3,22 +3,22 @@
 require_relative '../spec_helper'
 require 'pp'
 
-describe MarjRelation do
+describe Marj::Relation do
   describe '.where' do
-    subject { Marj.where(priority: 1).where(queue_name: 'foo') }
+    subject { Marj::Jobs.where(priority: 1).where(queue_name: 'foo') }
 
-    it 'returns a MarjRelation with the added criteria' do
+    it 'returns a Marj::Relation with the added criteria' do
       job1 = TestJob.set(queue: 'foo', priority: 1).perform_later
       TestJob.set(queue: 'foo', priority: 2).perform_later
       TestJob.set(queue: 'bar', priority: 1).perform_later
       job4 = TestJob.set(queue: 'foo', priority: 1).perform_later
-      expect(subject).to be_a(MarjRelation)
+      expect(subject).to be_a(Marj::Relation)
       expect(subject.map(&:job_id)).to contain_exactly(job1.job_id, job4.job_id)
     end
   end
 
   describe '.first' do
-    subject { Marj.where(priority: 2).first }
+    subject { Marj::Jobs.where(priority: 2).first }
 
     it 'returns the first matching job' do
       TestJob.set(queue: 'foo', priority: 1).perform_later
@@ -33,7 +33,7 @@ describe MarjRelation do
   end
 
   describe '.last' do
-    subject { Marj.where(priority: 2).last }
+    subject { Marj::Jobs.where(priority: 2).last }
 
     it 'returns the last matching job' do
       TestJob.set(queue: 'foo', priority: 1).perform_later
@@ -48,7 +48,7 @@ describe MarjRelation do
   end
 
   describe '.count' do
-    subject { Marj.where(priority: 2).count }
+    subject { Marj::Jobs.where(priority: 2).count }
 
     it 'returns the number of matching job' do
       TestJob.set(queue: 'foo', priority: 1).perform_later
@@ -62,7 +62,7 @@ describe MarjRelation do
   end
 
   describe '.ready' do
-    subject { Marj.where(priority: 2).ready }
+    subject { Marj::Jobs.where(priority: 2).ready }
 
     it 'returns the matching job' do
       TestJob.set(priority: 1).perform_later
@@ -77,7 +77,7 @@ describe MarjRelation do
   end
 
   describe '.perform_all' do
-    subject { Marj.where(priority: 2).perform_all }
+    subject { Marj::Jobs.where(priority: 2).perform_all }
 
     context 'when matching jobs exist' do
       before do
@@ -91,8 +91,8 @@ describe MarjRelation do
       end
 
       it 'removes the jobs from the queue' do
-        expect { subject }.to change(MarjRecord, :count).from(3).to(1)
-        expect(MarjRecord.first.priority).to eq(1)
+        expect { subject }.to change(Marj::Record, :count).from(3).to(1)
+        expect(Marj::Record.first.priority).to eq(1)
       end
 
       it 'returns the job results' do
@@ -108,7 +108,7 @@ describe MarjRelation do
   end
 
   describe '.discard_all' do
-    subject { Marj.where(priority: 2).discard_all }
+    subject { Marj::Jobs.where(priority: 2).discard_all }
 
     context 'when matching jobs exist' do
       before do
@@ -118,8 +118,8 @@ describe MarjRelation do
       end
 
       it 'discards all matching jobs' do
-        expect { subject }.to change(MarjRecord, :count).from(3).to(1)
-        expect(MarjRecord.first.priority).to eq(1)
+        expect { subject }.to change(Marj::Record, :count).from(3).to(1)
+        expect(Marj::Record.first.priority).to eq(1)
       end
 
       it 'returns the number of jobs discarded' do
@@ -135,7 +135,7 @@ describe MarjRelation do
   end
 
   context '#pretty_print' do
-    subject { PP.pp(Marj.all, StringIO.new).string }
+    subject { PP.pp(Marj::Jobs.all, StringIO.new).string }
 
     before { TestJob.perform_later(1) }
 

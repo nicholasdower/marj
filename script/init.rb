@@ -95,6 +95,6 @@ class TestDb
   def self.clear
     raise 'connection not established' unless @connected
 
-    MarjRecord.delete_all
+    Marj::Record.delete_all
   end
 end

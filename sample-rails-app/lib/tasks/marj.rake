@@ -8,27 +8,27 @@ namespace :marj do
     ActiveSupport.on_load(:active_record) { loaded = true }
     raise 'ActiveRecord loaded too soon' if loaded
 
-    Marj.count
+    Marj::Jobs.count
     raise 'ActiveRecord not loaded' unless loaded
 
-    MarjRecord.delete_all
-    raise 'Unexpected job found' unless Marj.count.zero?
+    Marj::Record.delete_all
+    raise 'Unexpected job found' unless Marj::Jobs.count.zero?
 
     TestJob.perform_later('TestJob.runs << 1')
-    raise 'Job not enqueued' unless Marj.count == 1
+    raise 'Job not enqueued' unless Marj::Jobs.count == 1
 
-    Marj.first.perform_now
+    Marj::Jobs.first.perform_now
     raise 'Job not executed' unless TestJob.runs == [1]
-    raise 'Job not deleted' unless Marj.count.zero?
+    raise 'Job not deleted' unless Marj::Jobs.count.zero?
 
     TestJob.perform_later('raise "hi"')
-    raise 'Job not enqueued' unless Marj.first&.executions = 0
+    raise 'Job not enqueued' unless Marj::Jobs.first&.executions = 0
 
-    Marj.first.perform_now
-    raise 'Job not executed' unless (Marj.first.executions = 1)
+    Marj::Jobs.first.perform_now
+    raise 'Job not executed' unless (Marj::Jobs.first.executions = 1)
 
-    Marj.first.perform_now rescue e = $ERROR_INFO
+    Marj::Jobs.first.perform_now rescue e = $ERROR_INFO
     raise 'error not raised' unless e&.message == 'hi'
-    raise 'Job not deleted' unless Marj.count.zero?
+    raise 'Job not deleted' unless Marj::Jobs.count.zero?
   end
 end
