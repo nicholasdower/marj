@@ -39,18 +39,22 @@ module Marj
         Marj::Relation.new(Marj::Record.all)
       end
 
-      # Returns the first job or +nil+ if there aren't any jobs.
+      # Returns the first enqueued job or the first N enqueued jobs if +limit+ is specified. If no jobs are enqueued,
+      # returns +nil+.
       #
+      # @param limit [Integer, NilClass]
       # @return [ActiveJob::Base, NilClass]
-      def first
-        all.first
+      def first(limit = nil)
+        all.first(limit)
       end
 
-      # Returns the last job or +nil+ if there aren't any jobs.
+      # Returns the last enqueued job or the last N enqueued jobs if +limit+ is specified. If no jobs are enqueued,
+      # returns +nil+.
       #
+      # @param limit [Integer, NilClass]
       # @return [ActiveJob::Base, NilClass]
-      def last
-        all.last
+      def last(limit = nil)
+        all.last(limit)
       end
 
       # Returns a count of jobs, optionally either matching the specified column name criteria or where the specified

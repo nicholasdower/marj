@@ -111,35 +111,77 @@ describe Marj::Jobs do
   end
 
   describe '.first' do
-    subject { Marj::Jobs.first }
+    context 'without limit' do
+      subject { Marj::Jobs.first }
 
-    it 'returns the first job by enqueued_at' do
-      job1 = TestJob.perform_later
-      Timecop.travel(1.second)
-      TestJob.perform_later
-      expect(subject.job_id).to eq(job1.job_id)
+      it 'returns the first job by enqueued_at' do
+        job1 = TestJob.perform_later
+        Timecop.travel(1.second)
+        TestJob.perform_later
+        expect(subject.job_id).to eq(job1.job_id)
+      end
+
+      context 'when no jobs exist' do
+        it 'returns nil' do
+          expect(subject).to be_nil
+        end
+      end
     end
 
-    context 'when no jobs exist' do
-      it 'returns nil' do
-        expect(subject).to be_nil
+    context 'with limit' do
+      subject { Marj::Jobs.first(2) }
+
+      it 'returns the first N job by enqueued_at' do
+        job1 = TestJob.perform_later
+        Timecop.travel(1.second)
+        job2 = TestJob.perform_later
+        Timecop.travel(1.second)
+        TestJob.perform_later
+        expect(subject.map(&:job_id)).to eq([job1.job_id, job2.job_id])
+      end
+
+      context 'when no jobs exist' do
+        it 'returns []' do
+          expect(subject).to eq([])
+        end
       end
     end
   end
 
   describe '.last' do
-    subject { Marj::Jobs.last }
+    context 'without limit' do
+      subject { Marj::Jobs.last }
 
-    it 'returns the last job by enqueued_at' do
-      TestJob.perform_later
-      Timecop.travel(1.second)
-      job2 = TestJob.perform_later
-      expect(subject.job_id).to eq(job2.job_id)
+      it 'returns the first job by enqueued_at' do
+        TestJob.perform_later
+        Timecop.travel(1.second)
+        job2 = TestJob.perform_later
+        expect(subject.job_id).to eq(job2.job_id)
+      end
+
+      context 'when no jobs exist' do
+        it 'returns nil' do
+          expect(subject).to be_nil
+        end
+      end
     end
 
-    context 'when no jobs exist' do
-      it 'returns nil' do
-        expect(subject).to be_nil
+    context 'with limit' do
+      subject { Marj::Jobs.last(2) }
+
+      it 'returns the first N job by enqueued_at' do
+        TestJob.perform_later
+        Timecop.travel(1.second)
+        job2 = TestJob.perform_later
+        Timecop.travel(1.second)
+        job3 = TestJob.perform_later
+        expect(subject.map(&:job_id)).to eq([job2.job_id, job3.job_id])
+      end
+
+      context 'when no jobs exist' do
+        it 'returns []' do
+          expect(subject).to eq([])
+        end
       end
     end
   end

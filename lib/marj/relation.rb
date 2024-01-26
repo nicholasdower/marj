@@ -10,18 +10,22 @@ module Marj
       @ar_relation = ar_relation
     end
 
-    # Returns the first job in the relation, or +nil+ if the relation is empty.
+    # Returns the first job in the relation or the first N jobs if +limit+ is specified. If no jobs are in the relation,
+    # returns +nil+.
     #
+    # @param limit [Integer, NilClass]
     # @return [ActiveJob::Base, NilClass]
-    def first
-      @ar_relation.first&.as_job
+    def first(limit = nil)
+      @ar_relation.first(limit)&.then { _1.is_a?(Array) ? _1.map(&:as_job) : _1.as_job }
     end
 
-    # Returns the last job in the relation, or +nil+ if the relation is empty.
+    # Returns the last job in the relation or the last N jobs if +limit+ is specified. If no jobs are in the relation,
+    # returns +nil+.
     #
+    # @param limit [Integer, NilClass]
     # @return [ActiveJob::Base, NilClass]
-    def last
-      @ar_relation.last&.as_job
+    def last(limit = nil)
+      @ar_relation.last(limit)&.then { _1.is_a?(Array) ? _1.map(&:as_job) : _1.as_job }
     end
 
     # Returns a count of jobs in this relation, optionally either matching the specified column name criteria or where

@@ -4,7 +4,7 @@ require_relative '../../spec_helper'
 require 'pp'
 
 describe Marj::Relation do
-  describe '.where' do
+  describe '#where' do
     subject { Marj::Jobs.where(priority: 1).where(queue_name: 'foo') }
 
     it 'returns a Marj::Relation with the added criteria' do
@@ -17,37 +17,69 @@ describe Marj::Relation do
     end
   end
 
-  describe '.first' do
-    subject { Marj::Jobs.where(priority: 2).first }
-
-    it 'returns the first matching job' do
+  describe '#first' do
+    before do
       TestJob.set(queue: 'foo', priority: 1).perform_later
       Timecop.travel(1.minute)
       TestJob.set(queue: 'bar', priority: 2).perform_later
       Timecop.travel(1.minute)
       TestJob.set(queue: 'baz', priority: 2).perform_later
       Timecop.travel(1.minute)
-      expect(subject).to be_a(TestJob)
-      expect(subject.queue_name).to eq('bar')
+      TestJob.set(queue: 'moo', priority: 2).perform_later
+      Timecop.travel(1.minute)
+    end
+
+    context 'without limit' do
+      subject { Marj::Jobs.where(priority: 2).first }
+
+      it 'returns the first matching job' do
+        expect(subject).to be_a(TestJob)
+        expect(subject.queue_name).to eq('bar')
+      end
+    end
+
+    context 'with limit' do
+      subject { Marj::Jobs.where(priority: 2).first(2) }
+
+      it 'returns the first N matching jobs' do
+        expect(subject.map(&:class)).to eq([TestJob, TestJob])
+        expect(subject.map(&:queue_name)).to eq(%w[bar baz])
+      end
     end
   end
 
-  describe '.last' do
-    subject { Marj::Jobs.where(priority: 2).last }
-
-    it 'returns the last matching job' do
-      TestJob.set(queue: 'foo', priority: 1).perform_later
+  describe '#last' do
+    before do
+      TestJob.set(queue: 'foo', priority: 2).perform_later
       Timecop.travel(1.minute)
       TestJob.set(queue: 'bar', priority: 2).perform_later
       Timecop.travel(1.minute)
       TestJob.set(queue: 'baz', priority: 2).perform_later
       Timecop.travel(1.minute)
-      expect(subject).to be_a(TestJob)
-      expect(subject.queue_name).to eq('baz')
+      TestJob.set(queue: 'moo', priority: 1).perform_later
+      Timecop.travel(1.minute)
+    end
+
+    context 'without limit' do
+      subject { Marj::Jobs.where(priority: 2).last }
+
+      it 'returns the first matching job' do
+        expect(subject).to be_a(TestJob)
+        expect(subject.queue_name).to eq('baz')
+      end
+    end
+
+    context 'with limit' do
+      subject { Marj::Jobs.where(priority: 2).last(2) }
+
+      it 'returns the first N matching jobs' do
+        expect(subject.map(&:class)).to eq([TestJob, TestJob])
+        expect(subject.map(&:queue_name)).to eq(%w[bar baz])
+      end
     end
   end
 
-  describe '.count' do
+  describe '#count' do
     subject { Marj::Jobs.where(priority: 2).count }
 
     it 'returns the number of matching job' do
@@ -61,7 +93,7 @@ describe Marj::Relation do
     end
   end
 
-  describe '.ready' do
+  describe '#ready' do
     subject { Marj::Jobs.where(priority: 2).ready }
 
     it 'returns the matching job' do
@@ -76,7 +108,7 @@ describe Marj::Relation do
     end
   end
 
-  describe '.perform_all' do
+  describe '#perform_all' do
     subject { Marj::Jobs.where(priority: 2).perform_all }
 
     context 'when matching jobs exist' do
@@ -134,7 +166,7 @@ describe Marj::Relation do
     end
   end
 
-  describe '.discard_all' do
+  describe '#discard_all' do
     subject { Marj::Jobs.where(priority: 2).discard_all }
 
     context 'when matching jobs exist' do

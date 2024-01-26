@@ -85,15 +85,15 @@ and discard enqueued jobs. It deals with `ActiveJob` objects rather than
 `ActiveRecord` objects. To query the database directly, use `Marj::Record`.
 
 ```ruby
-Marj::Jobs.all          # Returns all enqueued jobs.
-Marj::Jobs.ready        # Returns jobs which are ready to be executed.
-Marj::Jobs.first        # Returns the first job by enqueued_at.
-Marj::Jobs.last         # Returns the last job by enqueued_at.
-Marj::Jobs.count        # Returns the number of enqueued jobs.
-Marj::Jobs.where        # Returns jobs matching the specified criteria.
-Marj::Jobs.discard      # Discards the specified job.
-Marj::Jobs.discard_all  # Discards all jobs.
-Marj::Jobs.perform_all  # Executes all jobs.
+Marj::Jobs.all         # Returns all enqueued jobs.
+Marj::Jobs.ready       # Returns jobs which are ready to be executed.
+Marj::Jobs.first       # Returns the first job(s) by enqueued_at.
+Marj::Jobs.last        # Returns the last job(s) by enqueued_at.
+Marj::Jobs.count       # Returns the number of enqueued jobs.
+Marj::Jobs.where       # Returns jobs matching the specified criteria.
+Marj::Jobs.perform_all # Executes all jobs.
+Marj::Jobs.discard_all # Discards all jobs.
+Marj::Jobs.discard     # Discards the specified job.
 ```
 
 `all`, `ready` and `where` return a `Marj::Relation` which provides the same
