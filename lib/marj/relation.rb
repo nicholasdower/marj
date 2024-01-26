@@ -52,9 +52,18 @@ module Marj
 
     # Calls +perform_now+ on each job in this relation.
     #
+    # @param batch_size [Integer, NilClass] the number of jobs to fetch at a time, or +nil+ to fetch all jobs at once
     # @return [Array] the results returned by each job
-    def perform_all
-      @ar_relation.map(&:as_job).map { |job| ActiveJob::Callbacks.run_callbacks(:execute) { job.perform_now } }
+    def perform_all(batch_size: nil)
+      if batch_size
+        [].tap do |results|
+          while (jobs = @ar_relation.limit(batch_size).map(&:as_job)).any?
+            results.concat(jobs.map { |job| ActiveJob::Callbacks.run_callbacks(:execute) { job.perform_now } })
+          end
+        end
+      else
+        @ar_relation.map(&:as_job).map { |job| ActiveJob::Callbacks.run_callbacks(:execute) { job.perform_now } }
+      end
     end
 
     # Discards all jobs in this relation.

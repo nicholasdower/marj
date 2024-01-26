@@ -16,6 +16,8 @@ Development: https://github.com/nicholasdower/marj/blob/master/CONTRIBUTING.md
 - Successfully executed jobs are deleted from the database.
 - Failed jobs which should be retried are updated in the database.
 - Failed jobs which should not be retried are deleted from the database.
+- An interface is provided to retrieve, execute, discard and re-enqueue jobs.
+- An `ActiveRecord` model class is provided to query the database directly.
 
 ## Features Not Provided
 
@@ -24,22 +26,17 @@ Development: https://github.com/nicholasdower/marj/blob/master/CONTRIBUTING.md
 - Concurrency Controls
 - Observability
 - A User Interace
-- Anything else you might dream up.
 
 ## Setup
 
 ### 1. Install
 
 ```shell
-bundle add activejob
-bundle add activerecord
-bundle add marj
+bundle add activejob activerecord marj
 
 # or
 
-gem install activejob
-gem install activerecord
-gem install marj
+gem install activejob activerecord marj
 ```
 
 ### 3. Create the jobs table
@@ -76,25 +73,16 @@ end
 ```ruby
 require 'marj'
 
-# With rails:
-class MyApplication < Rails::Application
-  config.active_job.queue_adapter = :marj
-end
-
-# Without Rails:
-ActiveJob::Base.queue_adapter = :marj
-
-# With or without Rails for a single job class:
-class SomeJob < ActiveJob::Base
-  self.queue_adapter = :marj
-end
+Rails.configuration.active_job.queue_adapter = :marj # Globally, with Rails
+ActiveJob::Base.queue_adapter = :marj                # Globally, without Rails
+SomeJob.queue_adapter = :marj                        # Single job
 ```
 
 ## Jobs Interface
 
 `Marj::Jobs` provides a query interface which can be used to retrieve, execute
 and discard enqueued jobs. It deals with `ActiveJob` objects rather than
-`ActiveRecord` objects. To query the databse directly, use `Marj::Record`.
+`ActiveRecord` objects. To query the database directly, use `Marj::Record`.
 
 ```ruby
 Marj::Jobs.all          # Returns all enqueued jobs.
@@ -102,8 +90,8 @@ Marj::Jobs.ready        # Returns jobs which are ready to be executed.
 Marj::Jobs.first        # Returns the first job by enqueued_at.
 Marj::Jobs.last         # Returns the last job by enqueued_at.
 Marj::Jobs.count        # Returns the number of enqueued jobs.
-Marj::Jobs.where(*args) # Returns jobs matching the specified criteria.
-Marj::Jobs.discard(job) # Discards the given job.
+Marj::Jobs.where        # Returns jobs matching the specified criteria.
+Marj::Jobs.discard      # Discards the specified job.
 Marj::Jobs.discard_all  # Discards all jobs.
 Marj::Jobs.perform_all  # Executes all jobs.
 ```
@@ -116,7 +104,7 @@ Marj::Jobs.where(job_class: SomeJob).ready.first
 ```
 
 Note that the `Marj::Jobs` interface can be added to any class or module. For
-instance, to add the jobs interface to jobs classes:
+example, to add the jobs interface to all jobs classes:
 
 ```ruby
 class ApplicationJob < ActiveJob::Base
@@ -125,8 +113,7 @@ class ApplicationJob < ActiveJob::Base
   def self.all
     Marj::Relation.new(
       self == ApplicationJob ?
-        Marj::Record.all :
-        Marj::Record.where(job_class: self)
+        Marj::Record.all : Marj::Record.where(job_class: self)
    )
   end
 end
@@ -144,26 +131,24 @@ SomeJob.ready        # Returns SomeJobs which are ready to be executed.
 job = SomeJob.perform_later('foo')
 job.perform_now
 
-# Enqueue, retrieve and manually run a job:
-SomeJob.perform_later('foo')
-Marj::Jobs.first.perform_now
+# Retrieve a job
+Marj::Jobs.last
 
-# Run all ready jobs:
+# Retrieve and execute a job
+Marj::Jobs.ready.first.perform_now
+
+# Run all ready jobs (single DB query)
 Marj::Jobs.ready.perform_all
 
-# Run all ready jobs, querying each time:
-loop { Marj::Jobs.ready.first&.tap(&:perform_now) || break }
+# Run all ready jobs (multiple DB queries)
+Marj::Jobs.ready.perform_all(batch_size: 1)
 
 # Run all ready jobs in a specific queue:
-loop do
-  Marj::Jobs.where(queue_name: 'foo').ready.first&.tap(&:perform_now) || break
-end
+Marj::Jobs.where(queue_name: 'foo').ready.perform_all
 
-# Run jobs as they become ready:
+# Run jobs indefinitely, as they become ready:
 loop do
-  loop { Marj::Jobs.ready.first&..tap(&:perform_now) || break }
-rescue Exception => e
-  logger.error(e)
+  Marj::Jobs.ready.perform_all rescue logger.error($!)
 ensure
   sleep 5.seconds
 end
@@ -172,7 +157,8 @@ end
 ## Customization
 
 It is possible to create a custom record class and jobs interface. This enables,
-for instance, writing jobs to multiple databases/tables.
+for instance, writing jobs to multiple databases/tables within a single
+application.
 
 ```
 class CreateMyJobs < ActiveRecord::Migration[7.1]
@@ -217,8 +203,7 @@ class ApplicationJob < ActiveJob::Base
   def self.all
     Marj::Relation.new(
       self == ApplicationJob ?
-        MyRecord.all :
-        MyRecord.where(job_class: self)
+        MyRecord.all : MyRecord.where(job_class: self)
     )
   end
 end
@@ -229,11 +214,7 @@ class MyJob < ApplicationJob
   end
 end
 
-# Insert a job into the my_jobs table.
 MyJob.perform_later('oh, hi')
-
-# Retrieve the next job in the queue and execute it. Re-enqueue on retryable
-# failure. Delete the corresponding record on success or discard.
 MyJob.ready.first.perform_now
 ```
 
@@ -243,7 +224,7 @@ By default, jobs enqeued during tests will be written to the database. Enqueued
 jobs can be executed via:
 
 ```ruby
-Marj::Jobs.ready.each(&:perform_now)
+Marj::Jobs.ready.perform_all
 ```
 
 Alternatively, to use [ActiveJob::QueueAdapters::TestAdapter](https://api.rubyonrails.org/classes/ActiveJob/QueueAdapters/TestAdapter.html):
@@ -326,10 +307,8 @@ For more information on ActiveJob, see:
 
 ```ruby
 # With Rails
-class MyApplication < Rails::Application
-  config.active_job.queue_adapter = :foo           # Instantiates FooAdapter
-  config.active_job.queue_adapter = FooAdapter.new # Uses FooAdapter directly
-end
+Rails.configuration.active_job.queue_adapter = :foo # Instantiates FooAdapter
+Rails.configuration.active_job.queue_adapter = FooAdapter.new
 
 # Without Rails
 ActiveJob::Base.queue_adapter = :foo               # Instantiates FooAdapter
@@ -346,11 +325,11 @@ SomeJob.queue_adapter = FooAdapter.new             # Uses FooAdapter directly
 - `config.active_job.queue_name_prefix`
 - `config.active_job.queue_name_delimiter`
 - `config.active_job.retry_jitter`
+- `SomeJob.queue_name`
+- `SomeJob.queue_as`
 - `SomeJob.queue_name_prefix`
 - `SomeJob.queue_name_delimiter`
 - `SomeJob.retry_jitter`
-- `SomeJob.queue_name`
-- `SomeJob.queue_as`
 
 ### Options
 
@@ -383,12 +362,13 @@ SomeJob.queue_adapter = FooAdapter.new             # Uses FooAdapter directly
 # Create without enqueueing
 job = SomeJob.new
 job = SomeJob.new(args)
+job = SomeJob.new.deserialize(other_job.serialize)
 
 # Create and enqueue
 job = SomeJob.perform_later
 job = SomeJob.perform_later(args)
 
-# Create and run (enqueued on failure)
+# Create without enqueueing and run (only enqueued on failure if retryable)
 SomeJob.perform_now
 SomeJob.perform_now(args)
 ```
@@ -416,8 +396,6 @@ ActiveJob::Base.execute(SomeJob.new(args).serialize)
 # Enqueue multiple
 ActiveJob.perform_all_later(SomeJob.new, SomeJob.new)
 ActiveJob.perform_all_later(SomeJob.new, SomeJob.new, options:)
-
-# Enqueue multiple
 SomeJob.set(options).perform_all_later(SomeJob.new, SomeJob.new)
 SomeJob.set(options).perform_all_later(SomeJob.new, SomeJob.new, options:)
 ```
@@ -425,7 +403,7 @@ SomeJob.set(options).perform_all_later(SomeJob.new, SomeJob.new, options:)
 ### Executing Jobs
 
 ```ruby
-# Executed without enqueueing, enqueued on failure if retries configured
+# Executed without enqueueing, enqueued on failure if retryable
 SomeJob.new(args).perform_now
 SomeJob.perform_now(args)
 ActiveJob::Base.execute(SomeJob.new(args).serialize)

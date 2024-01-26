@@ -80,23 +80,50 @@ describe Marj::Relation do
     subject { Marj::Jobs.where(priority: 2).perform_all }
 
     context 'when matching jobs exist' do
-      before do
-        TestJob.set(priority: 1).perform_later('TestJob.runs << 1; "foo"')
-        TestJob.set(priority: 2).perform_later('TestJob.runs << 2; "bar"')
-        TestJob.set(priority: 2).perform_later('TestJob.runs << 3; "baz"')
+      context 'without batch_size' do
+        before do
+          TestJob.set(priority: 1).perform_later('TestJob.runs << 1; "foo"')
+          TestJob.set(priority: 2).perform_later('TestJob.runs << 2; "bar"')
+          TestJob.set(priority: 2).perform_later('TestJob.runs << 3; "baz"')
+        end
+
+        it 'executes all matching jobs' do
+          expect { subject }.to change { TestJob.runs.sort }.from([]).to([2, 3])
+        end
+
+        it 'removes the jobs from the queue' do
+          expect { subject }.to change(Marj::Record, :count).from(3).to(1)
+          expect(Marj::Record.first.priority).to eq(1)
+        end
+
+        it 'returns the job results' do
+          expect(subject).to contain_exactly(['bar'], ['baz'])
+        end
       end
 
-      it 'executes all matching jobs' do
-        expect { subject }.to change { TestJob.runs.sort }.from([]).to([2, 3])
-      end
+      context 'with batch_size' do
+        subject { Marj::Jobs.where(priority: 2).perform_all(batch_size: 2) }
 
-      it 'removes the jobs from the queue' do
-        expect { subject }.to change(Marj::Record, :count).from(3).to(1)
-        expect(Marj::Record.first.priority).to eq(1)
-      end
+        let(:ar_relation) { instance_double(ActiveRecord::Relation) }
 
-      it 'returns the job results' do
-        expect(subject).to contain_exactly(['bar'], ['baz'])
+        before do
+          TestJob.set(priority: 2).perform_later('TestJob.runs << 1; "foo"')
+          Timecop.travel(1.minute)
+          TestJob.set(priority: 2).perform_later('TestJob.runs << 2; "bar"')
+          Timecop.travel(1.minute)
+          TestJob.set(priority: 2).perform_later('TestJob.runs << 3; "bar"')
+          Timecop.travel(1.minute)
+          TestJob.set(priority: 1).perform_later('TestJob.runs << 4; "bar"')
+
+          allow(ar_relation).to receive(:where).and_return(ar_relation)
+          allow(ar_relation).to receive(:limit).and_return(Marj::Record.first(2), [Marj::Record.third], [])
+          allow(Marj::Record).to receive(:all).and_return(ar_relation)
+        end
+
+        it 'retrieves jobs in batches' do
+          expect(ar_relation).to receive(:limit).exactly(3).times
+          expect { subject }.to change { TestJob.runs.sort }.from([]).to([1, 2, 3])
+        end
       end
     end
 

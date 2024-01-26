@@ -3,7 +3,8 @@
 require_relative 'relation'
 
 module Marj
-  # Provides methods for querying, performing and discarding jobs.
+  # Provides methods for querying, performing and discarding jobs. Deals with +ActiveJob+ objects rather than
+  # +ActiveRecord+ objects. To query the database directly, use {Marj::Record} instead.
   #
   # To create a query interface for all job classes:
   #   class ApplicationJob < ActiveJob::Base
@@ -80,9 +81,10 @@ module Marj
 
       # Calls +perform_now+ on each job.
       #
+      # @param batch_size [Integer, NilClass] the number of jobs to fetch at a time, or +nil+ to fetch all jobs at once
       # @return [Array] the results returned by each job
-      def perform_all
-        all.perform_all
+      def perform_all(batch_size: nil)
+        all.perform_all(batch_size: batch_size)
       end
 
       # Discards all jobs.

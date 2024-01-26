@@ -213,6 +213,26 @@ describe Marj::Jobs do
         expect(subject).to eq([])
       end
     end
+
+    context 'with batch_size' do
+      subject { Marj::Jobs.perform_all(batch_size: 2) }
+
+      let(:ar_relation) { instance_double(ActiveRecord::Relation) }
+
+      before do
+        TestJob.perform_later('TestJob.runs << 1; "foo"')
+        TestJob.perform_later('TestJob.runs << 2; "bar"')
+        TestJob.perform_later('TestJob.runs << 3; "bar"')
+        TestJob.perform_later('TestJob.runs << 4; "bar"')
+        allow(ar_relation).to receive(:limit).and_return(Marj::Record.first(2), Marj::Record.last(2), [])
+        allow(Marj::Record).to receive(:all).and_return(ar_relation)
+      end
+
+      it 'retrieves jobs in batches' do
+        expect(ar_relation).to receive(:limit).exactly(3).times
+        expect { subject }.to change { TestJob.runs.sort }.from([]).to([1, 2, 3, 4])
+      end
+    end
   end
 
   describe '.discard_all' do
