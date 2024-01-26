@@ -3,3 +3,5 @@
 - Introduced `Marj::Record` to replace the `ActiveRecord` functionality in `Marj`.
 - Introduced `Marj::Jobs` and `Marj::Relation` to provide an interface to enqueued jobs rather than records.
 - Removed `Marj.table_name`. To override the table name, set `Marj::Record.table_name` or create a custom `ActiveRecord` model class.
+- Added support for using Marj to write to multiple databases.
+- Added support for creating custom jobs interfaces, for instance `MyJob.ready.first`.

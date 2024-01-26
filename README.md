@@ -90,6 +90,53 @@ class SomeJob < ActiveJob::Base
 end
 ```
 
+## Jobs Interface
+
+`Marj::Jobs` provides a query interface which can be used to retrieve, execute
+and discard enqueued jobs. It deals with `ActiveJob` objects rather than
+`ActiveRecord` objects. To query the databse directly, use `Marj::Record`.
+
+```ruby
+Marj::Jobs.all          # Returns all enqueued jobs.
+Marj::Jobs.ready        # Returns jobs which are ready to be executed.
+Marj::Jobs.first        # Returns the first job by enqueued_at.
+Marj::Jobs.last         # Returns the last job by enqueued_at.
+Marj::Jobs.count        # Returns the number of enqueued jobs.
+Marj::Jobs.where(*args) # Returns jobs matching the specified criteria.
+Marj::Jobs.discard(job) # Discards the given job.
+Marj::Jobs.discard_all  # Discards all jobs.
+Marj::Jobs.perform_all  # Executes all jobs.
+```
+
+`all`, `ready` and `where` return a `Marj::Relation` which provides the same
+query methods as `Marj::Jobs`. This can be used to chain query methods like:
+
+```ruby
+Marj::Jobs.where(job_class: SomeJob).ready.first
+```
+
+Note that the `Marj::Jobs` interface can be added to any class or module. For
+instance, to add the jobs interface to jobs classes:
+
+```ruby
+class ApplicationJob < ActiveJob::Base
+  self.class.include Marj::Jobs::ClassMethods
+
+  def self.all
+    Marj::Relation.new(
+      self == ApplicationJob ?
+        Marj::Record.all :
+        Marj::Record.where(job_class: self)
+   )
+  end
+end
+
+class SomeJob < ApplicationJob; end
+
+ApplicationJob.ready # Returns all jobs which are ready to be executed.
+SomeJob.ready        # Returns SomeJobs which are ready to be executed.
+```
+
 ## Example Usage
 
 ```ruby
@@ -108,7 +155,9 @@ Marj::Jobs.ready.perform_all
 loop { Marj::Jobs.ready.first&.tap(&:perform_now) || break }
 
 # Run all ready jobs in a specific queue:
-loop { Marj::Jobs.where(queue_name: 'foo').ready.first&.tap(&:perform_now) || break }
+loop do
+  Marj::Jobs.where(queue_name: 'foo').ready.first&.tap(&:perform_now) || break
+end
 
 # Run jobs as they become ready:
 loop do
@@ -120,9 +169,78 @@ ensure
 end
 ```
 
+## Customization
+
+It is possible to create a custom record class and jobs interface. This enables,
+for instance, writing jobs to multiple databases/tables.
+
+```
+class CreateMyJobs < ActiveRecord::Migration[7.1]
+  def self.up
+    create_table :my_jobs, id: :string, primary_key: :job_id do |table|
+      table.string   :job_class,            null: false
+      table.text     :arguments,            null: false
+      table.string   :queue_name,           null: false
+      table.integer  :priority
+      table.integer  :executions,           null: false
+      table.text     :exception_executions, null: false
+      table.datetime :enqueued_at,          null: false
+      table.datetime :scheduled_at
+      table.string   :locale,               null: false
+      table.string   :timezone,             null: false
+    end
+
+    add_index :my_jobs, %i[enqueued_at]
+    add_index :my_jobs, %i[scheduled_at]
+    add_index :my_jobs, %i[priority scheduled_at enqueued_at]
+  end
+
+  def self.down
+    drop_table :my_jobs
+  end
+end
+
+class MyRecord < ActiveRecord::Base
+  include Marj::Record::Base
+  self.class.include Marj::Record::Base::ClassMethods
+
+  self.table_name = 'my_jobs'
+end
+
+CreateMyJobs.migrate(:up)
+
+class ApplicationJob < ActiveJob::Base
+  self.queue_adapter = MarjAdapter.new('MyRecord')
+
+  self.class.include Marj::Jobs::ClassMethods
+
+  def self.all
+    Marj::Relation.new(
+      self == ApplicationJob ?
+        MyRecord.all :
+        MyRecord.where(job_class: self)
+    )
+  end
+end
+
+class MyJob < ApplicationJob
+  def perform(msg)
+    puts msg
+  end
+end
+
+# Insert a job into the my_jobs table.
+MyJob.perform_later('oh, hi')
+
+# Retrieve the next job in the queue and execute it. Re-enqueue on retryable
+# failure. Delete the corresponding record on success or discard.
+MyJob.ready.first.perform_now
+```
+
 ## Testing
 
-By default, jobs enqeued during tests will be written to the database. Enqueued jobs can be executed via:
+By default, jobs enqeued during tests will be written to the database. Enqueued
+jobs can be executed via:
 
 ```ruby
 Marj::Jobs.ready.each(&:perform_now)
@@ -145,7 +263,9 @@ class ApplicationJob < ActiveJob::Base
 
   around_perform do |job, block|
     if (timeout = job.class.instance_variable_get(:@timeout))
-      ::Timeout.timeout(timeout, StandardError, 'execution expired') { block.call }
+      ::Timeout.timeout(timeout, StandardError, 'execution expired') do
+        block.call
+      end
     else
       block.call
     end
@@ -172,7 +292,9 @@ class ApplicationJob < ActiveJob::Base
   def last_error=(error)
     if error.is_a?(Exception)
       backtrace = error.backtrace&.map { |line| "\t#{line}" }&.join("\n")
-      error = backtrace ? "#{error.class}: #{error.message}\n#{backtrace}" : "#{error.class}: #{error.message}"
+      error = backtrace ?
+        "#{error.class}: #{error.message}\n#{backtrace}" :
+        "#{error.class}: #{error.message}"
     end
 
     @last_error = error&.truncate(10_000, omission: '… (truncated)')
@@ -273,10 +395,10 @@ SomeJob.perform_now(args)
 
 ### Enqueueing Jobs
 
-Jobs are enqueued via the `ActiveJob::Base#enqueue` method. This method returns the job on
-success. If an error is raised during enqueueing, that error will propagate to the caller,
-unless the error is an `ActiveJob::EnqueueError`. In this case, `enqueue` will return `false`
-and `job.enqueue_error` will be set.
+Jobs are enqueued via the `ActiveJob::Base#enqueue` method. This method returns
+the job on success. If an error is raised during enqueueing, that error will
+propagate to the caller, unless the error is an `ActiveJob::EnqueueError`. In
+this case, `enqueue` will return `false` and `job.enqueue_error` will be set.
 
 ```ruby
 SomeJob.new(args).enqueue

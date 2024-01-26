@@ -5,16 +5,29 @@ require_relative 'relation'
 module Marj
   # Provides methods for querying, performing and discarding jobs.
   #
-  # To create a custom query interface, for instance on a job class:
-  #   FooJob < ActiveJob::Base
+  # To create a query interface for all job classes:
+  #   class ApplicationJob < ActiveJob::Base
   #     self.class.include Marj::Jobs::ClassMethods
   #
   #     def self.all
-  #       Marj::Relation.new(Marj::Record.where(job_class: Foo).all)
+  #       Marj::Relation.new(self == ApplicationJob ? Marj::Record.all : Marj::Record.where(job_class: self))
   #     end
   #   end
   #
-  #   FooJob.first
+  #   ApplicationJob.first
+  #   SomeJob.first
+  #
+  # To create a query interface for a single job class:
+  #   class SomeJob < ActiveJob::Base
+  #     self.class.include Marj::Jobs::ClassMethods
+  #
+  #     def self.all
+  #       Marj::Relation.new(Marj::Record.where(job_class: self).all)
+  #     end
+  #   end
+  #
+  #   SomeJob.first
+  #
   module Jobs
     # Class methods for {Marj::Jobs}. Can be used to create a custom jobs class.
     module ClassMethods
