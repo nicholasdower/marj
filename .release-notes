@@ -2,3 +2,4 @@
 - Removed `Marj.execute` in favor of just using `job.perform_now`.
 - Updated `Marj` to not extend `ActiveRecord::Base`. Replaced by `MarjRecord`.
 - Updated `Marj` to provide an interface to enqueued jobs rather than records.
+- Remove `Marj.table_name`. To override the table name, set `MarjRecord.table_name`.

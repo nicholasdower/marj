@@ -42,7 +42,7 @@ class MarjRecord < ActiveRecord::Base
     @job.tap { @job.deserialize(job_data) }
   end
 
-  self.table_name = Marj.table_name
+  self.table_name = 'jobs'
 
   # Order by +enqueued_at+ rather than +job_id+ (the default)
   self.implicit_order_column = 'enqueued_at'

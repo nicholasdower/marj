@@ -12,14 +12,7 @@ class Marj
   # The Marj version.
   VERSION = '3.0.0.pre'
 
-  @table_name = 'jobs'
-
   class << self
-    # The name of the database table. Defaults to "jobs".
-    #
-    # @return [String]
-    attr_accessor :table_name
-
     # Returns a {MarjRelation} for all jobs.
     #
     # @return [MarjRelation]

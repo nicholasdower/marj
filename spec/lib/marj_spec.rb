@@ -3,17 +3,6 @@
 require_relative '../spec_helper'
 
 describe Marj do
-  describe '.table_name' do
-    it 'returns the default table name' do
-      expect(Marj.table_name).to eq('jobs')
-    end
-
-    it 'returns the configured table name' do
-      Marj.table_name = 'foo'
-      expect(Marj.table_name).to eq('foo')
-    end
-  end
-
   describe '.all' do
     subject { Marj.all }
 

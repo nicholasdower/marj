@@ -42,17 +42,7 @@ gem install activerecord
 gem install marj
 ```
 
-### 2. Configure
-
-By default, the database table is named "jobs". To use a different table name:
-
-```ruby
-require 'marj'
-
-Marj.table_name = 'some_name'
-```
-
-### 3. Create the database table
+### 3. Create the jobs table
 
 ```ruby
 class CreateJobs < ActiveRecord::Migration[7.1]
