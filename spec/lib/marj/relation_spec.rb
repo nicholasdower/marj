@@ -161,7 +161,20 @@ describe Marj::Relation do
     end
   end
 
-  context '#pretty_print' do
+  context 'Enumerable' do
+    subject { Marj::Jobs.where(priority: 2).each { TestJob.runs << _1 } }
+
+    it 'yields job objects' do
+      TestJob.set(priority: 2, queue: 'foo').perform_later
+      TestJob.set(priority: 2, queue: 'bar').perform_later
+      TestJob.set(priority: 1, queue: 'baz').perform_later
+      expect { subject }.to change { TestJob.runs.size }.from(0).to(2)
+      expect(TestJob.runs.map(&:class)).to contain_exactly(TestJob, TestJob)
+      expect(TestJob.runs.map(&:queue_name)).to contain_exactly('foo', 'bar')
+    end
+  end
+
+  describe '#pretty_print' do
     subject { PP.pp(Marj::Jobs.all, StringIO.new).string }
 
     before { TestJob.perform_later(1) }
