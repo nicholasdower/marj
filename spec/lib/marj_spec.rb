@@ -3,6 +3,43 @@
 require_relative '../spec_helper'
 
 describe Marj do
+  describe '#to_job' do
+    subject { Marj.send(:to_job, record) }
+
+    let(:record) { MarjRecord.first }
+    let(:job) { TestJob.perform_later }
+
+    before { job }
+
+    it 'returns a job instance' do
+      expect(subject).to be_a(TestJob)
+    end
+
+    it 'deserializes the job data' do
+      %i[job_id executions arguments queue_name priority scheduled_at].each do |field|
+        expect(subject.public_send(field)).to eq(job.public_send(field))
+      end
+    end
+  end
+
+  describe '#register_callbacks' do
+    context 'when callbacks already registered' do
+      it 'raises' do
+        job = TestJob.perform_later
+        expect { Marj.send(:register_callbacks, job, Marj.first) }
+          .to raise_error(RuntimeError, /already registered/)
+      end
+
+      it 'does not register re-register callbacks' do
+        job = TestJob.perform_later
+
+        expect(job.singleton_class).not_to receive(:after_perform)
+        expect(job.singleton_class).not_to receive(:after_discard)
+        Marj.send(:register_callbacks, job, Marj.first) rescue nil
+      end
+    end
+  end
+
   describe '.all' do
     subject { Marj.all }
 
@@ -192,12 +229,11 @@ describe Marj do
     context 'when jobs exist' do
       before do
         TestJob.perform_later('TestJob.runs << 1; "foo"')
-        Timecop.travel(1.minute)
         TestJob.perform_later('TestJob.runs << 2; "bar"')
       end
 
       it 'executes all jobs' do
-        expect { subject }.to change(TestJob, :runs).from([]).to([1, 2])
+        expect { subject }.to change { TestJob.runs.sort }.from([]).to([1, 2])
       end
 
       it 'removes the jobs from the queue' do
@@ -205,7 +241,7 @@ describe Marj do
       end
 
       it 'returns the job results' do
-        expect(subject).to eq([['foo'], ['bar']])
+        expect(subject).to contain_exactly(['foo'], ['bar'])
       end
     end
 

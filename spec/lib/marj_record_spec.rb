@@ -56,47 +56,4 @@ describe MarjRecord do
       expect(MarjRecord.ready.map(&:queue_name)).to eq(%w[1 2])
     end
   end
-
-  describe '#register_callbacks' do
-    context 'when callbacks already registered' do
-      it 'raises' do
-        job = TestJob.perform_later
-        expect { MarjRecord.send(:register_callbacks, job, Marj.first) }
-          .to raise_error(RuntimeError, /already registered/)
-      end
-
-      it 'does not register re-register callbacks' do
-        job = TestJob.perform_later
-
-        expect(job.singleton_class).not_to receive(:after_perform)
-        expect(job.singleton_class).not_to receive(:after_discard)
-        MarjRecord.send(:register_callbacks, job, Marj.first) rescue nil
-      end
-    end
-  end
-
-  describe '#job' do
-    subject { record.job }
-
-    let(:record) { MarjRecord.first }
-    let(:job) { TestJob.perform_later }
-
-    before { job }
-
-    it 'returns a job instance' do
-      expect(subject).to be_a(TestJob)
-    end
-
-    it 'deserializes the job data' do
-      %i[job_id executions arguments queue_name priority scheduled_at].each do |field|
-        expect(subject.public_send(field)).to eq(job.public_send(field))
-      end
-    end
-
-    context 'when called again' do
-      it 'returns the same job instance' do
-        expect(record.job).to be(record.job)
-      end
-    end
-  end
 end

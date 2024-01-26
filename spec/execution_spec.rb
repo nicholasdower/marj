@@ -26,7 +26,7 @@ describe 'Execution' do
     it 'updates the record on success' do
       TestJob.perform_later('TestJob.runs << 1')
       record = MarjRecord.last
-      expect { record.job.perform_now }.to change { record.destroyed? }.from(false).to(true)
+      expect { record.as_job.perform_now }.to change { record.destroyed? }.from(false).to(true)
     end
 
     it 're-enqueues the job on failure' do
@@ -46,7 +46,7 @@ describe 'Execution' do
     it 'updates the record on failure' do
       TestJob.perform_later('raise "hi"')
       record = MarjRecord.last
-      expect { record.job.perform_now }.to change { record.executions }.from(0).to(1)
+      expect { record.as_job.perform_now }.to change { record.executions }.from(0).to(1)
     end
 
     it 'deletes the job on discard' do
@@ -61,7 +61,7 @@ describe 'Execution' do
     it 'updates the record on discard' do
       TestJob.perform_later('raise "hi"')
       record = MarjRecord.last
-      job = record.job
+      job = record.as_job
       job.perform_now
       expect { job.perform_now rescue nil }.to change { record.destroyed? }.from(false).to(true)
     end

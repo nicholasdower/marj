@@ -13,14 +13,14 @@ class MarjRelation
   #
   # @return [ActiveJob::Base, NilClass]
   def first
-    @ar_relation.first&.job
+    @ar_relation.first&.as_job
   end
 
   # Returns the last job in the relation, or +nil+ if the relation is empty.
   #
   # @return [ActiveJob::Base, NilClass]
   def last
-    @ar_relation.last&.job
+    @ar_relation.last&.as_job
   end
 
   # Returns a count of jobs in this relation, optionally either matching the specified column name criteria or where the
@@ -30,7 +30,7 @@ class MarjRelation
   # @param block [Proc, NilClass]
   # @return [Integer]
   def count(column_name = nil, &block)
-    block_given? ? @ar_relation.count(column_name) { |record| block.call(record.job) } : @ar_relation.count(column_name)
+    block_given? ? @ar_relation.count(column_name) { |r| block.call(r.as_job) } : @ar_relation.count(column_name)
   end
 
   # Returns a {MarjRelation} for jobs matching the specified criteria.
@@ -53,7 +53,7 @@ class MarjRelation
   #
   # @return [Array] the results returned by each job
   def perform_all
-    @ar_relation.map(&:job).map { |job| ActiveJob::Callbacks.run_callbacks(:execute) { job.perform_now } }
+    @ar_relation.map(&:as_job).map { |job| ActiveJob::Callbacks.run_callbacks(:execute) { job.perform_now } }
   end
 
   # Discards all jobs in this relation.
@@ -65,7 +65,7 @@ class MarjRelation
 
   # Used by +Enumerable+ to iterate over the jobs in this relation.
   def each
-    @ar_relation.map(&:job).each { yield _1 }
+    @ar_relation.map(&:as_job).each { yield _1 }
   end
 
   # Provides +pretty_inspect+ output containing arrays of jobs rather than arrays of records, similar to the output

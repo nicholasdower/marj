@@ -26,20 +26,8 @@ class MarjRecord < ActiveRecord::Base
   # discarded.
   #
   # @return [ActiveJob::Base]
-  def job
-    return @job if @job
-
-    # See register_callbacks for details on how callbacks are used.
-    @job = job_class.new.tap { MarjRecord.send(:register_callbacks, _1, self) }
-
-    # ActiveJob::Base#deserialize expects serialized arguments. But the record arguments have already been
-    # deserialized by a custom ActiveRecord serializer (see below). So instead we use the raw arguments string.
-    job_data = attributes.merge('arguments' => JSON.parse(read_attribute_before_type_cast(:arguments)))
-
-    # ActiveJob::Base#deserialize expects dates to be strings rather than Time objects.
-    job_data = job_data.to_h { |k, v| [k, %w[enqueued_at scheduled_at].include?(k) ? v&.iso8601 : v] }
-
-    @job.tap { @job.deserialize(job_data) }
+  def as_job
+    Marj.send(:to_job, self)
   end
 
   self.table_name = 'jobs'
@@ -80,66 +68,4 @@ class MarjRecord < ActiveRecord::Base
       str&.constantize
     end
   end)
-
-  # Registers job callbacks used to keep the database record for the specified job in sync.
-  #
-  # @param job [ActiveJob::Base]
-  # @return [ActiveJob::Base]
-  def self.register_callbacks(job, record)
-    raise 'callbacks already registered' if job.singleton_class.instance_variable_get(:@__marj)
-
-    # We need to detect three cases:
-    #  - If a job succeeds, after_perform will be called.
-    #  - If a job fails and should be retried, enqueue will be called. This is handled by the enqueue method.
-    #  - If a job exceeds its max attempts, after_discard will be called.
-    job.singleton_class.after_perform { |_j| record.destroy! }
-    job.singleton_class.after_discard { |_j, _exception| record.destroy! }
-    job.singleton_class.instance_variable_set(:@__marj, record)
-
-    job
-  end
-  private_class_method :register_callbacks
-
-  # Enqueue a job for execution at the specified time.
-  #
-  # @param job [ActiveJob::Base] the job to enqueue
-  # @param time [Time, NilClass] optional time at which to execute the job
-  # @return [ActiveJob::Base] the enqueued job
-  def self.enqueue(job, time = nil)
-    job.scheduled_at = time
-    # Argument serialization is done by ActiveJob. ActiveRecord expects deserialized arguments.
-    serialized = job.serialize.symbolize_keys!.without(:provider_job_id).merge(arguments: job.arguments)
-
-    # When a job is enqueued, we must create/update the corresponding database record. We also must ensure callbacks are
-    # registered on the job instance so that when the job is executed, the database record is deleted or updated
-    # (depending on the result).
-    #
-    # We keep track of whether callbacks have been registered by setting the @__marj instance variable on the job's
-    # singleton class. This holds a reference to the record. This ensures that if execute is called on a record
-    # instance, any updates to the database are reflected on that record instance.
-    if (existing_record = job.singleton_class.instance_variable_get(:@__marj))
-      # This job instance has already been associated with a database row.
-      if MarjRecord.exists?(job_id: job.job_id)
-        # The database row still exists, we simply need to update it.
-        existing_record.update!(serialized)
-      else
-        # Someone else deleted the database row, we need to recreate and reload the existing record instance. We don't
-        # want to register the new instance because someone might still have a reference to the existing one.
-        MarjRecord.create!(serialized)
-        existing_record.reload
-      end
-    else
-      # This job instance has not been associated with a database row.
-      if (new_record = MarjRecord.find_by(job_id: job.job_id))
-        # The database row already exists. Update it.
-        new_record.update!(serialized)
-      else
-        # The database row does not exist. Create it.
-        new_record = MarjRecord.create!(serialized)
-      end
-      register_callbacks(job, new_record)
-    end
-    job
-  end
-  private_class_method :enqueue
 end

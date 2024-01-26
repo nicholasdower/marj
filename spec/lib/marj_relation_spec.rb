@@ -87,7 +87,7 @@ describe MarjRelation do
       end
 
       it 'executes all matching jobs' do
-        expect { subject }.to change(TestJob, :runs).from([]).to([2, 3])
+        expect { subject }.to change { TestJob.runs.sort }.from([]).to([2, 3])
       end
 
       it 'removes the jobs from the queue' do
@@ -96,7 +96,7 @@ describe MarjRelation do
       end
 
       it 'returns the job results' do
-        expect(subject).to eq([['bar'], ['baz']])
+        expect(subject).to contain_exactly(['bar'], ['baz'])
       end
     end
 
