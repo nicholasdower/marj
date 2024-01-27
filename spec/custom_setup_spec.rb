@@ -28,8 +28,7 @@ describe 'Custom Record' do
 
     stub_const('MyRecord', Class.new(ActiveRecord::Base))
     MyRecord.class_eval do
-      include Marj::Record::Base
-      extend Marj::Record::Base::ClassMethods
+      include Marj::RecordInterface
 
       self.table_name = 'my_jobs'
     end

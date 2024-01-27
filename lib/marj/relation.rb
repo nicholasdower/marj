@@ -3,7 +3,7 @@
 require_relative 'jobs_interface'
 
 module Marj
-  # Enables chaining of {Marj::JobsInterface} methods.
+  # Returned by {Marj::JobsInterface} query methods to enable chaining and +Enumerable+ methods.
   class Relation
     include Enumerable
     include Marj::JobsInterface

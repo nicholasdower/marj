@@ -190,8 +190,7 @@ class CreateMyJobs < ActiveRecord::Migration[7.1]
 end
 
 class MyRecord < ActiveRecord::Base
-  include Marj::Record::Base
-  extend Marj::Record::Base::ClassMethods
+  include Marj::RecordInterface
 
   self.table_name = 'my_jobs'
 end
