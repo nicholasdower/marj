@@ -1,8 +1,1 @@
-- Fixed a bug to support the case where a job is enqueued, deleted, then reenqueued via a new reference to the existing job instance.
-- Removed `Marj.execute` in favor of just using `job.perform_now`.
-- Introduced `Marj::Record` to replace the `ActiveRecord` functionality in `Marj`.
-- Introduced `Marj::Jobs` and `Marj::Relation` to provide an interface to enqueued jobs rather than records.
-- Removed `Marj.table_name`. To override the table name, set `Marj::Record.table_name` or create a custom `ActiveRecord` model class.
-- Added support for using Marj to write to multiple databases.
-- Added support for creating custom jobs interfaces, for instance `MyJob.next`.
-- Replace `Marj::Record.ready` with `Marj::Record.ordered` and `MarjRecord.due`. Always returned jobs ordered.
+- No change

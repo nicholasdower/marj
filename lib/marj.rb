@@ -11,7 +11,7 @@ require_relative 'marj/relation'
 # See https://github.com/nicholasdower/marj
 module Marj
   # The Marj version.
-  VERSION = '3.0.0.pre'
+  VERSION = '3.0.0'
 
   Kernel.autoload(:Record, File.expand_path(File.join('marj', 'record.rb'), __dir__))
 
