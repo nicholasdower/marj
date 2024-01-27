@@ -18,7 +18,7 @@ module Marj
     def self.included(clazz)
       clazz.extend(ClassMethods)
 
-      # Order by +enqueued_at+ rather than +job_id+ (the default)
+      # Order by +enqueued_at+ rather than +job_id+ (the default).
       clazz.implicit_order_column = 'enqueued_at'
 
       # Using a custom serializer for exception_executions so that we can interact with it as a hash rather than a
@@ -27,8 +27,8 @@ module Marj
 
       # Using a custom serializer for arguments so that we can interact with as an array rather than a string.
       # This enables code like:
-      #   Marj::Record.first.arguments.first
-      #   Marj::Record.first.update!(arguments: ['foo', 1, Time.now])
+      #   Marj::Record.next.arguments.first
+      #   Marj::Record.next.update!(arguments: ['foo', 1, Time.now])
       clazz.serialize(:arguments, coder: Class.new do
         def self.dump(arguments)
           return ActiveJob::Arguments.serialize(arguments).to_json if arguments.is_a?(Array)
@@ -60,12 +60,21 @@ module Marj
     # Class methods for {Marj::RecordInterface}.
     module ClassMethods
       # Returns an +ActiveRecord::Relation+ scope for enqueued jobs with a +scheduled_at+ that is either +null+ or in
-      # the past. Jobs are ordered by +priority+ (+null+ last), then +scheduled_at+ (+null+ last), then +enqueued_at+.
+      # the past.
       #
       # @return [ActiveRecord::Relation]
-      def ready
-        where('scheduled_at is null or scheduled_at <= ?', Time.now.utc).order(
-          Arel.sql(<<~SQL.squish)
+      def due
+        where('scheduled_at IS NULL OR scheduled_at <= ?', Time.now.utc)
+      end
+
+      # Returns an +ActiveRecord::Relation+ scope for jobs ordered by +priority+ (+null+ last), then +scheduled_at+
+      # (+null+ last), then +enqueued_at+.
+      #
+      # @return [ActiveRecord::Relation]
+      def ordered
+        order(
+          Arel.sql(<<~SQL.squish, Time.now.utc)
+            CASE WHEN scheduled_at IS NULL OR scheduled_at <= ? THEN 0 ELSE 1 END,
             CASE WHEN priority IS NULL THEN 1 ELSE 0 END, priority,
             CASE WHEN scheduled_at IS NULL THEN 1 ELSE 0 END, scheduled_at,
             enqueued_at

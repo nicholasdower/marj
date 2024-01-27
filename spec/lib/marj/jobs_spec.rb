@@ -110,11 +110,11 @@ describe Marj::Jobs do
     end
   end
 
-  describe '.first' do
+  describe '.next' do
     context 'without limit' do
-      subject { Marj::Jobs.first }
+      subject { Marj::Jobs.next }
 
-      it 'returns the first job by enqueued_at' do
+      it 'returns the next job by due date' do
         job1 = TestJob.perform_later
         Timecop.travel(1.second)
         TestJob.perform_later
@@ -129,53 +129,15 @@ describe Marj::Jobs do
     end
 
     context 'with limit' do
-      subject { Marj::Jobs.first(2) }
+      subject { Marj::Jobs.next(2) }
 
-      it 'returns the first N job by enqueued_at' do
+      it 'returns the next N jobs by due date' do
         job1 = TestJob.perform_later
         Timecop.travel(1.second)
         job2 = TestJob.perform_later
         Timecop.travel(1.second)
         TestJob.perform_later
         expect(subject.map(&:job_id)).to eq([job1.job_id, job2.job_id])
-      end
-
-      context 'when no jobs exist' do
-        it 'returns []' do
-          expect(subject).to eq([])
-        end
-      end
-    end
-  end
-
-  describe '.last' do
-    context 'without limit' do
-      subject { Marj::Jobs.last }
-
-      it 'returns the first job by enqueued_at' do
-        TestJob.perform_later
-        Timecop.travel(1.second)
-        job2 = TestJob.perform_later
-        expect(subject.job_id).to eq(job2.job_id)
-      end
-
-      context 'when no jobs exist' do
-        it 'returns nil' do
-          expect(subject).to be_nil
-        end
-      end
-    end
-
-    context 'with limit' do
-      subject { Marj::Jobs.last(2) }
-
-      it 'returns the first N job by enqueued_at' do
-        TestJob.perform_later
-        Timecop.travel(1.second)
-        job2 = TestJob.perform_later
-        Timecop.travel(1.second)
-        job3 = TestJob.perform_later
-        expect(subject.map(&:job_id)).to eq([job2.job_id, job3.job_id])
       end
 
       context 'when no jobs exist' do
@@ -210,37 +172,37 @@ describe Marj::Jobs do
     end
   end
 
-  describe '.ready' do
+  describe '.due' do
     it 'returns jobs where scheduled_at is null' do
       TestJob.set(queue: '1').perform_later
       Timecop.travel(1.minute)
-      expect(Marj::Jobs.ready.map(&:queue_name)).to eq(['1'])
+      expect(Marj::Jobs.due.map(&:queue_name)).to eq(['1'])
     end
 
     it 'returns jobs where scheduled_at is in the past' do
       TestJob.set(queue: '1', wait: 1.minutes).perform_later
       Timecop.travel(2.minutes)
-      expect(Marj::Jobs.ready.map(&:queue_name)).to eq(['1'])
+      expect(Marj::Jobs.due.map(&:queue_name)).to eq(['1'])
     end
 
     it 'does not return jobs where scheduled_at is in the future' do
       TestJob.set(queue: '1', wait: 2.minutes).perform_later
       Timecop.travel(1.minute)
-      expect(Marj::Jobs.ready.map(&:queue_name)).to be_empty
+      expect(Marj::Jobs.due.map(&:queue_name)).to be_empty
     end
 
     it 'returns jobs with a priority before jobs without a priority' do
       TestJob.set(queue: '1', wait: 2.minute, priority: 1).perform_later
       TestJob.set(queue: '2', wait: 1.minute, priority: nil).perform_later
       Timecop.travel(3.minutes)
-      expect(Marj::Jobs.ready.map(&:queue_name)).to eq(%w[1 2])
+      expect(Marj::Jobs.due.map(&:queue_name)).to eq(%w[1 2])
     end
 
     it 'returns jobs with a scheduled_at before jobs without a scheduled_at' do
       TestJob.set(queue: '1', wait: 1.minute).perform_later
       TestJob.set(queue: '2').perform_later
       Timecop.travel(2.minutes)
-      expect(Marj::Jobs.ready.map(&:queue_name)).to eq(%w[1 2])
+      expect(Marj::Jobs.due.map(&:queue_name)).to eq(%w[1 2])
     end
 
     it 'returns jobs with a sooner enqueued_at before jobs with a later enqueued_at' do
@@ -248,7 +210,7 @@ describe Marj::Jobs do
       Timecop.travel(1.minute)
       TestJob.set(queue: '2').perform_later
       Timecop.travel(1.minute)
-      expect(Marj::Jobs.ready.map(&:queue_name)).to eq(%w[1 2])
+      expect(Marj::Jobs.due.map(&:queue_name)).to eq(%w[1 2])
     end
   end
 
@@ -291,7 +253,7 @@ describe Marj::Jobs do
         TestJob.perform_later('TestJob.runs << 3; "bar"')
         TestJob.perform_later('TestJob.runs << 4; "bar"')
         allow(ar_relation).to receive(:limit).and_return(Marj::Record.first(2), Marj::Record.last(2), [])
-        allow(Marj::Record).to receive(:all).and_return(ar_relation)
+        allow(Marj::Record).to receive(:ordered).and_return(ar_relation)
       end
 
       it 'retrieves jobs in batches' do

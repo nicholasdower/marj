@@ -41,7 +41,7 @@ ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: 'storage/t
 ActiveRecord::Base.connection.drop_table(:jobs) if ActiveRecord::Base.connection.table_exists?(:jobs)
 CreateJobs.migrate(:up)
 
-Marj::Record.delete_all
+Marj::Jobs.discard_all
 raise 'Unexpected job found' unless Marj::Jobs.count.zero?
 
 class TestJob < ActiveJob::Base
@@ -61,16 +61,16 @@ end
 TestJob.perform_later('TestJob.runs << 1')
 raise 'Job not enqueued' unless Marj::Jobs.count == 1
 
-Marj::Jobs.first.perform_now
+Marj::Jobs.next.perform_now
 raise 'Job not executed' unless TestJob.runs == [1]
 raise 'Job not deleted' unless Marj::Jobs.count.zero?
 
 TestJob.perform_later('raise "hi"')
-raise 'Job not enqueued' unless Marj::Jobs.first&.executions = 0
+raise 'Job not enqueued' unless Marj::Jobs.next&.executions = 0
 
-Marj::Jobs.first.perform_now
-raise 'Job not executed' unless (Marj::Jobs.first.executions = 1)
+Marj::Jobs.next.perform_now
+raise 'Job not executed' unless (Marj::Jobs.next.executions = 1)
 
-Marj::Jobs.first.perform_now rescue e = $ERROR_INFO
+Marj::Jobs.next.perform_now rescue e = $ERROR_INFO
 raise 'error not raised' unless e&.message == 'hi'
 raise 'Job not deleted' unless Marj::Jobs.count.zero?

@@ -42,7 +42,7 @@ describe 'Custom Record' do
       extend Marj::JobsInterface
 
       def self.all
-        Marj::Relation.new(self == MyApplicationJob ? MyRecord.all : MyRecord.where(job_class: self))
+        Marj::Relation.new(self == MyApplicationJob ? MyRecord.ordered : MyRecord.where(job_class: self))
       end
 
       @runs = []
@@ -71,9 +71,9 @@ describe 'Custom Record' do
     Timecop.travel(1.minute)
     my_other_job = MyOtherJob.perform_later
     Timecop.travel(1.minute)
-    expect(MyApplicationJob.first.job_id).to eq(my_job.job_id)
-    expect(MyJob.first.job_id).to eq(my_job.job_id)
-    expect(MyOtherJob.first.job_id).to eq(my_other_job.job_id)
+    expect(MyApplicationJob.next.job_id).to eq(my_job.job_id)
+    expect(MyJob.next.job_id).to eq(my_job.job_id)
+    expect(MyOtherJob.next.job_id).to eq(my_other_job.job_id)
   end
 
   it 'runs jobs' do

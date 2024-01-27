@@ -13,7 +13,7 @@ describe 'Enqueueing' do
 
       it 'persists the job arguments' do
         subject
-        expect(Marj::Record.last.arguments.first).to eq('1')
+        expect(Marj::Record.last.arguments.last).to eq('1')
       end
     end
 
@@ -58,7 +58,7 @@ describe 'Enqueueing' do
 
       it 'persists the job arguments' do
         subject
-        expect(Marj::Record.last.arguments.first).to eq('1')
+        expect(Marj::Record.last.arguments.last).to eq('1')
       end
     end
   end
@@ -73,7 +73,7 @@ describe 'Enqueueing' do
 
       it 'persists the job arguments' do
         subject
-        expect(Marj::Record.last.arguments.first).to eq('1')
+        expect(Marj::Record.last.arguments.last).to eq('1')
       end
     end
 
@@ -118,7 +118,7 @@ describe 'Enqueueing' do
 
       it 'persists the job arguments' do
         subject
-        expect(Marj::Record.last.arguments.first).to eq('1')
+        expect(Marj::Record.last.arguments.last).to eq('1')
       end
     end
   end

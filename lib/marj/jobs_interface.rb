@@ -8,23 +8,23 @@ module Marj
   #     extend Marj::JobsInterface
   #
   #     def self.all
-  #       Marj::Relation.new(self == ApplicationJob ? Marj::Record.all : Marj::Record.where(job_class: self))
+  #       Marj::Relation.new(self == ApplicationJob ? Marj::Record.ordered : Marj::Record.where(job_class: self))
   #     end
   #   end
   #
-  #   ApplicationJob.first
-  #   SomeJob.first
+  #   ApplicationJob.next
+  #   SomeJob.next
   #
   # To create a jobs interface for a single job class:
   #   class SomeJob < ActiveJob::Base
   #     extend Marj::JobsInterface
   #
   #     def self.all
-  #       Marj::Relation.new(Marj::Record.where(job_class: self).all)
+  #       Marj::Relation.new(Marj::Record.where(job_class: self).ordered)
   #     end
   #   end
   #
-  #   SomeJob.first
+  #   SomeJob.next
   module JobsInterface
     # Returns a {Marj::Relation} for jobs in the specified queue(s).
     #
@@ -35,20 +35,12 @@ module Marj
       all.queue(queue, *queues)
     end
 
-    # Returns the first job or the first N jobs if +limit+ is specified. If no jobs exist, returns +nil+.
+    # Returns the next job or the next N jobs if +limit+ is specified. If no jobs exist, returns +nil+.
     #
     # @param limit [Integer, NilClass]
     # @return [ActiveJob::Base, NilClass]
-    def first(limit = nil)
-      all.first(limit)
-    end
-
-    # Returns the last job or the last N jobs if +limit+ is specified. If no jobs exist, returns +nil+.
-    #
-    # @param limit [Integer, NilClass]
-    # @return [ActiveJob::Base, NilClass]
-    def last(limit = nil)
-      all.last(limit)
+    def next(limit = nil)
+      all.next(limit)
     end
 
     # Returns a count of jobs, optionally either matching the specified column name criteria or where the specified
@@ -69,12 +61,11 @@ module Marj
       all.where(*args)
     end
 
-    # Returns a {Marj::Relation} for enqueued jobs with a +scheduled_at+ that is either +null+ or in the past. Jobs are
-    # ordered by +priority+ (+null+ last), then +scheduled_at+ (+null+ last), then +enqueued_at+.
+    # Returns a {Marj::Relation} for enqueued jobs with a +scheduled_at+ that is either +null+ or in the past.
     #
     # @return [Marj::Relation]
-    def ready
-      all.ready
+    def due
+      all.due
     end
 
     # Calls +perform_now+ on each job.

@@ -7,19 +7,19 @@ describe 'Execution' do
     it 'executes the job' do
       TestJob.perform_later('TestJob.runs << 1')
       expect(TestJob.runs).to eq([])
-      Marj::Jobs.last.perform_now
+      Marj::Jobs.next.perform_now
       expect(TestJob.runs).to eq([1])
     end
 
     it 'returns the result' do
       TestJob.perform_later('1')
-      expect(Marj::Jobs.last.perform_now).to eq([1])
+      expect(Marj::Jobs.next.perform_now).to eq([1])
     end
 
     it 'deletes the job on success' do
       TestJob.perform_later('TestJob.runs << 1')
       expect(Marj::Jobs.count).to eq(1)
-      Marj::Jobs.last.perform_now
+      Marj::Jobs.next.perform_now
       expect(Marj::Jobs.count).to eq(0)
     end
 
@@ -31,14 +31,14 @@ describe 'Execution' do
 
     it 're-enqueues the job on failure' do
       TestJob.perform_later('raise "hi"')
-      expect(Marj::Jobs.last.executions).to eq(0)
-      Marj::Jobs.last.perform_now
-      expect(Marj::Jobs.last.executions).to eq(1)
+      expect(Marj::Jobs.next.executions).to eq(0)
+      Marj::Jobs.next.perform_now
+      expect(Marj::Jobs.next.executions).to eq(1)
     end
 
     it 'returns the error on failure' do
       TestJob.perform_later('raise "hi"')
-      result = Marj::Jobs.last.perform_now
+      result = Marj::Jobs.next.perform_now
       expect(result).to be_a(StandardError)
       expect(result.message).to eq('hi')
     end
@@ -52,9 +52,9 @@ describe 'Execution' do
     it 'deletes the job on discard' do
       TestJob.perform_later('raise "hi"')
       expect(Marj::Jobs.count).to eq(1)
-      Marj::Jobs.last.perform_now
+      Marj::Jobs.next.perform_now
       expect(Marj::Jobs.count).to eq(1)
-      Marj::Jobs.last.perform_now rescue nil
+      Marj::Jobs.next.perform_now rescue nil
       expect(Marj::Jobs.count).to eq(0)
     end
 
@@ -68,8 +68,8 @@ describe 'Execution' do
 
     it 'raises on discard' do
       TestJob.perform_later('raise "hi"')
-      Marj::Jobs.last.perform_now
-      expect { Marj::Jobs.last.perform_now }.to raise_error(StandardError, 'hi')
+      Marj::Jobs.next.perform_now
+      expect { Marj::Jobs.next.perform_now }.to raise_error(StandardError, 'hi')
     end
   end
 end

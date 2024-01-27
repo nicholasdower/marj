@@ -18,14 +18,9 @@ module Marj
       Marj::Relation.new(@ar_relation.where(queue_name: queues.dup.unshift(queue)))
     end
 
-    # (see Marj::JobsInterface#first)
-    def first(limit = nil)
+    # (see Marj::JobsInterface#next)
+    def next(limit = nil)
       @ar_relation.first(limit)&.then { _1.is_a?(Array) ? _1.map(&:as_job) : _1.as_job }
-    end
-
-    # (see Marj::JobsInterface#last)
-    def last(limit = nil)
-      @ar_relation.last(limit)&.then { _1.is_a?(Array) ? _1.map(&:as_job) : _1.as_job }
     end
 
     # (see Marj::JobsInterface#count)
@@ -38,9 +33,9 @@ module Marj
       Marj::Relation.new(@ar_relation.where(*args))
     end
 
-    # (see Marj::JobsInterface#ready)
-    def ready
-      Marj::Relation.new(@ar_relation.ready)
+    # (see Marj::JobsInterface#due)
+    def due
+      Marj::Relation.new(@ar_relation.due)
     end
 
     # (see Marj::JobsInterface#perform_all)

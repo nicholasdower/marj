@@ -12,11 +12,11 @@ module Marj
   module Jobs
     singleton_class.include Marj::JobsInterface
 
-    # Returns a {Marj::Relation} for all jobs.
+    # Returns a {Marj::Relation} for all jobs in the order they should be executed.
     #
     # @return [Marj::Relation]
     def self.all
-      Marj::Relation.new(Marj::Record.all)
+      Marj::Relation.new(Marj::Record.ordered)
     end
 
     # Discards the specified job.

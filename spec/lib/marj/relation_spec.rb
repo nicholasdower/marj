@@ -17,7 +17,7 @@ describe Marj::Relation do
     end
   end
 
-  describe '#first' do
+  describe '#next' do
     before do
       TestJob.set(queue: 'foo', priority: 1).perform_later
       Timecop.travel(1.minute)
@@ -30,49 +30,18 @@ describe Marj::Relation do
     end
 
     context 'without limit' do
-      subject { Marj::Jobs.where(priority: 2).first }
+      subject { Marj::Jobs.where(priority: 2).next }
 
-      it 'returns the first matching job' do
+      it 'returns the next matching job' do
         expect(subject).to be_a(TestJob)
         expect(subject.queue_name).to eq('bar')
       end
     end
 
     context 'with limit' do
-      subject { Marj::Jobs.where(priority: 2).first(2) }
+      subject { Marj::Jobs.where(priority: 2).next(2) }
 
-      it 'returns the first N matching jobs' do
-        expect(subject.map(&:class)).to eq([TestJob, TestJob])
-        expect(subject.map(&:queue_name)).to eq(%w[bar baz])
-      end
-    end
-  end
-
-  describe '#last' do
-    before do
-      TestJob.set(queue: 'foo', priority: 2).perform_later
-      Timecop.travel(1.minute)
-      TestJob.set(queue: 'bar', priority: 2).perform_later
-      Timecop.travel(1.minute)
-      TestJob.set(queue: 'baz', priority: 2).perform_later
-      Timecop.travel(1.minute)
-      TestJob.set(queue: 'moo', priority: 1).perform_later
-      Timecop.travel(1.minute)
-    end
-
-    context 'without limit' do
-      subject { Marj::Jobs.where(priority: 2).last }
-
-      it 'returns the first matching job' do
-        expect(subject).to be_a(TestJob)
-        expect(subject.queue_name).to eq('baz')
-      end
-    end
-
-    context 'with limit' do
-      subject { Marj::Jobs.where(priority: 2).last(2) }
-
-      it 'returns the first N matching jobs' do
+      it 'returns the next N matching jobs' do
         expect(subject.map(&:class)).to eq([TestJob, TestJob])
         expect(subject.map(&:queue_name)).to eq(%w[bar baz])
       end
@@ -122,8 +91,8 @@ describe Marj::Relation do
     end
   end
 
-  describe '#ready' do
-    subject { Marj::Jobs.where(priority: 2).ready }
+  describe '#due' do
+    subject { Marj::Jobs.where(priority: 2).due }
 
     it 'returns the matching job' do
       TestJob.set(priority: 1).perform_later
@@ -178,7 +147,7 @@ describe Marj::Relation do
 
           allow(ar_relation).to receive(:where).and_return(ar_relation)
           allow(ar_relation).to receive(:limit).and_return(Marj::Record.first(2), [Marj::Record.third], [])
-          allow(Marj::Record).to receive(:all).and_return(ar_relation)
+          allow(Marj::Record).to receive(:ordered).and_return(ar_relation)
         end
 
         it 'retrieves jobs in batches' do
