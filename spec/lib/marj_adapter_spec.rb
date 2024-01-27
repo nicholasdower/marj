@@ -63,12 +63,12 @@ describe MarjAdapter do
 
     it 'registers callbacks' do
       subject
-      expect { job.perform_now }.to change(Marj, :count).from(1).to(0)
+      expect { job.perform_now }.to change(Marj::Jobs, :count).from(1).to(0)
     end
 
     it 'registers callbacks' do
       subject
-      expect { job.perform_now }.to change(Marj, :count).from(1).to(0)
+      expect { job.perform_now }.to change(Marj::Jobs, :count).from(1).to(0)
     end
 
     context 'when the job already exists' do

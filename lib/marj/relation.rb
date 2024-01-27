@@ -1,72 +1,49 @@
 # frozen_string_literal: true
 
+require_relative 'jobs_interface'
+
 module Marj
-  # Provides a small subset of the query and persistence methods provided by +ActiveRecord+ relations, but for jobs.
+  # Enables chaining of {Marj::JobsInterface} methods.
   class Relation
     include Enumerable
+    include Marj::JobsInterface
 
     # Returns a Marj::Relation which wraps the specified +ActiveRecord+ relation.
     def initialize(ar_relation)
       @ar_relation = ar_relation
     end
 
-    # Returns a {Marj::Relation} for jobs in the specified queue(s).
-    #
-    # @param queue [String, Symbol] the queue to query
-    # @param queues [Array<String, Array<Symbol>] more queues to query
-    # @return [Marj::Relation]
+    # (see Marj::JobsInterface#queue)
     def queue(queue, *queues)
       Marj::Relation.new(@ar_relation.where(queue_name: queues.dup.unshift(queue)))
     end
 
-    # Returns the first job in the relation or the first N jobs if +limit+ is specified. If no jobs are in the relation,
-    # returns +nil+.
-    #
-    # @param limit [Integer, NilClass]
-    # @return [ActiveJob::Base, NilClass]
+    # (see Marj::JobsInterface#first)
     def first(limit = nil)
       @ar_relation.first(limit)&.then { _1.is_a?(Array) ? _1.map(&:as_job) : _1.as_job }
     end
 
-    # Returns the last job in the relation or the last N jobs if +limit+ is specified. If no jobs are in the relation,
-    # returns +nil+.
-    #
-    # @param limit [Integer, NilClass]
-    # @return [ActiveJob::Base, NilClass]
+    # (see Marj::JobsInterface#last)
     def last(limit = nil)
       @ar_relation.last(limit)&.then { _1.is_a?(Array) ? _1.map(&:as_job) : _1.as_job }
     end
 
-    # Returns a count of jobs in this relation, optionally either matching the specified column name criteria or where
-    # the specified block returns +true+.
-    #
-    # @param column_name [String, Symbol, NilClass]
-    # @param block [Proc, NilClass]
-    # @return [Integer]
+    # (see Marj::JobsInterface#count)
     def count(column_name = nil, &block)
       block_given? ? @ar_relation.count(column_name) { |r| block.call(r.as_job) } : @ar_relation.count(column_name)
     end
 
-    # Returns a {Marj::Relation} for jobs matching the specified criteria.
-    #
-    # @param args [Array]
-    # @return [Marj::Relation]
+    # (see Marj::JobsInterface#where)
     def where(*args)
       Marj::Relation.new(@ar_relation.where(*args))
     end
 
-    # Returns a {Marj::Relation} for enqueued jobs with a +scheduled_at+ that is either +null+ or in the past. Jobs are
-    # ordered by +priority+ (+null+ last), then +scheduled_at+ (+null+ last), then +enqueued_at+.
-    #
-    # @return [Marj::Relation]
+    # (see Marj::JobsInterface#ready)
     def ready
       Marj::Relation.new(@ar_relation.ready)
     end
 
-    # Calls +perform_now+ on each job in this relation.
-    #
-    # @param batch_size [Integer, NilClass] the number of jobs to fetch at a time, or +nil+ to fetch all jobs at once
-    # @return [Array] the results returned by each job
+    # (see Marj::JobsInterface#perform_all)
     def perform_all(batch_size: nil)
       if batch_size
         [].tap do |results|
@@ -79,15 +56,16 @@ module Marj
       end
     end
 
-    # Discards all jobs in this relation.
-    #
-    # @return [Numeric] the number of discarded jobs
+    # (see Marj::JobsInterface#discard_all)
     def discard_all
       @ar_relation.delete_all
     end
 
-    # Used by +Enumerable+ to iterate over the jobs in this relation.
-    def each
+    # Yields each job in this relation.
+    #
+    # @param block [Proc]
+    # @return [Array] the jobs in this relation
+    def each(&block)
       @ar_relation.map(&:as_job).each { yield _1 }
     end
 

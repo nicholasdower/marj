@@ -29,7 +29,7 @@ describe 'Custom Record' do
     stub_const('MyRecord', Class.new(ActiveRecord::Base))
     MyRecord.class_eval do
       include Marj::Record::Base
-      self.class.include Marj::Record::Base::ClassMethods
+      extend Marj::Record::Base::ClassMethods
 
       self.table_name = 'my_jobs'
     end
@@ -40,7 +40,7 @@ describe 'Custom Record' do
     MyApplicationJob.class_eval do
       self.queue_adapter = MarjAdapter.new(MyRecord)
 
-      self.class.include Marj::Jobs::ClassMethods
+      extend Marj::JobsInterface
 
       def self.all
         Marj::Relation.new(self == MyApplicationJob ? MyRecord.all : MyRecord.where(job_class: self))

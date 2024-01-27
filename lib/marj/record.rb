@@ -14,7 +14,7 @@ module Marj
     # Example Usage:
     #   class MyRecord < ActiveRecord::Base
     #     include Marj::Record::Base
-    #     self.class.include Marj::Record::Base::ClassMethods
+    #     extend Marj::Record::Base::ClassMethods
     #
     #     self.table_name = 'my_jobs'
     #   end
@@ -89,7 +89,7 @@ module Marj
     end
 
     include Marj::Record::Base
-    self.class.include Marj::Record::Base::ClassMethods
+    extend Marj::Record::Base::ClassMethods
 
     self.table_name = 'jobs'
   end

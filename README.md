@@ -110,7 +110,7 @@ example, to add the jobs interface to all jobs classes:
 
 ```ruby
 class ApplicationJob < ActiveJob::Base
-  self.class.include Marj::Jobs::ClassMethods
+  extend Marj::JobsInterface
 
   def self.all
     Marj::Relation.new(
@@ -190,7 +190,7 @@ end
 
 class MyRecord < ActiveRecord::Base
   include Marj::Record::Base
-  self.class.include Marj::Record::Base::ClassMethods
+  extend Marj::Record::Base::ClassMethods
 
   self.table_name = 'my_jobs'
 end
@@ -200,7 +200,7 @@ CreateMyJobs.migrate(:up)
 class ApplicationJob < ActiveJob::Base
   self.queue_adapter = MarjAdapter.new('MyRecord')
 
-  self.class.include Marj::Jobs::ClassMethods
+  extend Marj::JobsInterface
 
   def self.all
     Marj::Relation.new(

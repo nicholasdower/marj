@@ -2,6 +2,7 @@
 
 require_relative 'marj_adapter'
 require_relative 'marj/jobs'
+require_relative 'marj/jobs_interface'
 require_relative 'marj/relation'
 
 # The simplest database-backed ActiveJob queueing backend.
@@ -14,8 +15,6 @@ module Marj
   Kernel.autoload(:Record, File.expand_path(File.join('marj', 'record.rb'), __dir__))
 
   class << self
-    include Marj::Jobs::ClassMethods
-
     private
 
     # Creates a job instance for the given record which will update the database when successfully executed, enqueued or
