@@ -1,6 +1,6 @@
 # Marj - Minimal ActiveRecord Jobs
 
-The simplest database-backed ActiveJob queueing backend.
+A minimal database-backed ActiveJob queueing backend.
 
 ## Quick Links
 

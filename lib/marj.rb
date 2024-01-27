@@ -5,7 +5,7 @@ require_relative 'marj/jobs'
 require_relative 'marj/jobs_interface'
 require_relative 'marj/relation'
 
-# The simplest database-backed ActiveJob queueing backend.
+# A minimal database-backed ActiveJob queueing backend.
 #
 # See https://github.com/nicholasdower/marj
 module Marj
