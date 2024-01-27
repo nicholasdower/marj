@@ -4,8 +4,9 @@ require_relative 'jobs_interface'
 require_relative 'relation'
 
 module Marj
-  # Provides methods for querying, performing and discarding jobs. Deals with +ActiveJob+ objects rather than
-  # +ActiveRecord+ objects. To query the database directly, use {Marj::Record} instead.
+  # Provides methods for querying, performing and discarding jobs. Returns, yields and accepts
+  # +ActiveJob+ objects rather than +ActiveRecord+ objects. To query the database directly, use
+  # {Marj::Record}.
   #
   # To create a custom jobs interface, see {Marj::JobsInterface}.
   module Jobs

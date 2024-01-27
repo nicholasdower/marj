@@ -66,7 +66,7 @@ module Marj
     # @param block [Proc]
     # @return [Array] the jobs in this relation
     def each(&block)
-      @ar_relation.map(&:as_job).each { yield _1 }
+      @ar_relation.map(&:as_job).each(&block)
     end
 
     # Provides +pretty_inspect+ output containing arrays of jobs rather than arrays of records, similar to the output

@@ -81,8 +81,9 @@ SomeJob.queue_adapter = :marj                        # Single job
 ## Jobs Interface
 
 `Marj::Jobs` provides a query interface which can be used to retrieve, execute
-and discard enqueued jobs. It deals with `ActiveJob` objects rather than
-`ActiveRecord` objects. To query the database directly, use `Marj::Record`.
+and discard enqueued jobs. It returns, yields and accepts `ActiveJob` objects
+rather than `ActiveRecord` objects. To query the database directly, use
+`Marj::Record`.
 
 ```ruby
 Marj::Jobs.all         # Returns all enqueued jobs.
