@@ -68,7 +68,7 @@ module Marj
     # produced when calling +pretty_inspect+ on +ActiveRecord::Relation+.
     #
     # Instead of the default +pretty_inspect+ output:
-    #   > Marj::Jobs.all
+    #   > Marj.all
     #    =>
     #   #<Marj::Relation:0x000000012728bd88
     #    @ar_relation=
@@ -86,7 +86,7 @@ module Marj
     #       timezone: "UTC">]>
     #
     # Produces:
-    #   > Marj::Jobs.all
+    #   > Marj.all
     #    =>
     #   [#<TestJob:0x000000010b63cef8
     #     @_scheduled_at_time=nil,

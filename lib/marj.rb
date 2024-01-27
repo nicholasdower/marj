@@ -1,12 +1,15 @@
 # frozen_string_literal: true
 
 require_relative 'marj_adapter'
-require_relative 'marj/jobs'
 require_relative 'marj/jobs_interface'
 require_relative 'marj/record_interface'
 require_relative 'marj/relation'
 
 # A minimal database-backed ActiveJob queueing backend.
+#
+# The {Marj} module extends the {Marj::JobsInterface} module to provide methods for querying, performing and discarding
+# jobs. These methods accept, return and yield +ActiveJob+ objects rather than +ActiveRecord+ objects. To query the
+# database directly, use {Marj::Record}.
 #
 # See https://github.com/nicholasdower/marj
 module Marj
@@ -16,6 +19,22 @@ module Marj
   Kernel.autoload(:Record, File.expand_path(File.join('marj', 'record.rb'), __dir__))
 
   class << self
+    include Marj::JobsInterface
+
+    # Returns a {Marj::Relation} for all jobs in the order they should be executed.
+    #
+    # @return [Marj::Relation]
+    def all
+      Marj::Relation.new(Marj::Record.ordered)
+    end
+
+    # Discards the specified job.
+    #
+    # @return [Integer] the number of discarded jobs
+    def discard(job)
+      all.where(job_id: job.job_id).discard_all
+    end
+
     private
 
     # Creates a job instance for the given record which will update the database when successfully executed, enqueued or
@@ -36,7 +55,6 @@ module Marj
 
       job.tap { job.deserialize(job_data) }
     end
-    private :to_job
 
     # Registers callbacks for the given job which destroy the given database record when the job succeeds or is
     # discarded.
@@ -57,7 +75,6 @@ module Marj
 
       job
     end
-    private :register_callbacks
 
     # Enqueue a job for execution at the specified time.
     #
@@ -101,6 +118,5 @@ module Marj
       end
       job
     end
-    private :enqueue
   end
 end

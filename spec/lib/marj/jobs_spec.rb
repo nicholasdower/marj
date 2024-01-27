@@ -2,9 +2,9 @@
 
 require_relative '../../spec_helper'
 
-describe Marj::Jobs do
+describe Marj do
   describe '.all' do
-    subject { Marj::Jobs.all }
+    subject { Marj.all }
 
     context 'when jobs exist' do
       it 'returns a Marj::Relation for all jobs' do
@@ -24,7 +24,7 @@ describe Marj::Jobs do
   end
 
   describe '.where' do
-    subject { Marj::Jobs.where(queue_name: 'foo') }
+    subject { Marj.where(queue_name: 'foo') }
 
     context 'when jobs match' do
       it 'returns a Marj::Relation for jobs matching the specified criteria' do
@@ -47,7 +47,7 @@ describe Marj::Jobs do
 
   describe '.count' do
     context 'without a column_name or block' do
-      subject { Marj::Jobs.count }
+      subject { Marj.count }
 
       context 'when jobs exist' do
         it 'returns a count of all jobs' do
@@ -65,7 +65,7 @@ describe Marj::Jobs do
     end
 
     context 'with a column name' do
-      subject { Marj::Jobs.count('distinct queue_name') }
+      subject { Marj.count('distinct queue_name') }
 
       context 'when jobs exist' do
         it 'returns a count of all jobs' do
@@ -84,7 +84,7 @@ describe Marj::Jobs do
     end
 
     context 'with a block' do
-      subject { Marj::Jobs.count { _1.queue_name == 'bar' } }
+      subject { Marj.count { _1.queue_name == 'bar' } }
 
       context 'when matching jobs exist' do
         it 'returns a count of all matching jobs' do
@@ -102,7 +102,7 @@ describe Marj::Jobs do
     end
 
     context 'with a column_name and a block' do
-      subject { Marj::Jobs.count('foo') { _1.queue_name == 'bar' } }
+      subject { Marj.count('foo') { _1.queue_name == 'bar' } }
 
       it 'raises' do
         expect { subject }.to raise_error(ArgumentError, /not supported/)
@@ -112,7 +112,7 @@ describe Marj::Jobs do
 
   describe '.next' do
     context 'without limit' do
-      subject { Marj::Jobs.next }
+      subject { Marj.next }
 
       it 'returns the next job by due date' do
         job1 = TestJob.perform_later
@@ -129,7 +129,7 @@ describe Marj::Jobs do
     end
 
     context 'with limit' do
-      subject { Marj::Jobs.next(2) }
+      subject { Marj.next(2) }
 
       it 'returns the next N jobs by due date' do
         job1 = TestJob.perform_later
@@ -150,7 +150,7 @@ describe Marj::Jobs do
 
   describe '.queue' do
     context 'when one queue is specified' do
-      subject { Marj::Jobs.queue('foo') }
+      subject { Marj.queue('foo') }
 
       it 'returns jobs with the specified queue_name' do
         job1 = TestJob.set(queue: 'foo').perform_later
@@ -161,7 +161,7 @@ describe Marj::Jobs do
     end
 
     context 'when one queue is specified' do
-      subject { Marj::Jobs.queue('foo', 'bar') }
+      subject { Marj.queue('foo', 'bar') }
 
       it 'returns jobs with the specified queue_name' do
         job1 = TestJob.set(queue: 'foo').perform_later
@@ -176,33 +176,33 @@ describe Marj::Jobs do
     it 'returns jobs where scheduled_at is null' do
       TestJob.set(queue: '1').perform_later
       Timecop.travel(1.minute)
-      expect(Marj::Jobs.due.map(&:queue_name)).to eq(['1'])
+      expect(Marj.due.map(&:queue_name)).to eq(['1'])
     end
 
     it 'returns jobs where scheduled_at is in the past' do
       TestJob.set(queue: '1', wait: 1.minutes).perform_later
       Timecop.travel(2.minutes)
-      expect(Marj::Jobs.due.map(&:queue_name)).to eq(['1'])
+      expect(Marj.due.map(&:queue_name)).to eq(['1'])
     end
 
     it 'does not return jobs where scheduled_at is in the future' do
       TestJob.set(queue: '1', wait: 2.minutes).perform_later
       Timecop.travel(1.minute)
-      expect(Marj::Jobs.due.map(&:queue_name)).to be_empty
+      expect(Marj.due.map(&:queue_name)).to be_empty
     end
 
     it 'returns jobs with a priority before jobs without a priority' do
       TestJob.set(queue: '1', wait: 2.minute, priority: 1).perform_later
       TestJob.set(queue: '2', wait: 1.minute, priority: nil).perform_later
       Timecop.travel(3.minutes)
-      expect(Marj::Jobs.due.map(&:queue_name)).to eq(%w[1 2])
+      expect(Marj.due.map(&:queue_name)).to eq(%w[1 2])
     end
 
     it 'returns jobs with a scheduled_at before jobs without a scheduled_at' do
       TestJob.set(queue: '1', wait: 1.minute).perform_later
       TestJob.set(queue: '2').perform_later
       Timecop.travel(2.minutes)
-      expect(Marj::Jobs.due.map(&:queue_name)).to eq(%w[1 2])
+      expect(Marj.due.map(&:queue_name)).to eq(%w[1 2])
     end
 
     it 'returns jobs with a sooner enqueued_at before jobs with a later enqueued_at' do
@@ -210,12 +210,12 @@ describe Marj::Jobs do
       Timecop.travel(1.minute)
       TestJob.set(queue: '2').perform_later
       Timecop.travel(1.minute)
-      expect(Marj::Jobs.due.map(&:queue_name)).to eq(%w[1 2])
+      expect(Marj.due.map(&:queue_name)).to eq(%w[1 2])
     end
   end
 
   describe '.perform_all' do
-    subject { Marj::Jobs.perform_all }
+    subject { Marj.perform_all }
 
     context 'when jobs exist' do
       before do
@@ -243,7 +243,7 @@ describe Marj::Jobs do
     end
 
     context 'with batch_size' do
-      subject { Marj::Jobs.perform_all(batch_size: 2) }
+      subject { Marj.perform_all(batch_size: 2) }
 
       let(:ar_relation) { instance_double(ActiveRecord::Relation) }
 
@@ -264,7 +264,7 @@ describe Marj::Jobs do
   end
 
   describe '.discard_all' do
-    subject { Marj::Jobs.discard_all }
+    subject { Marj.discard_all }
 
     context 'when jobs exist' do
       before do
@@ -289,7 +289,7 @@ describe Marj::Jobs do
   end
 
   describe '.discard' do
-    subject { Marj::Jobs.discard(job) }
+    subject { Marj.discard(job) }
 
     before { job }
 

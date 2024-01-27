@@ -1,1 +1,1 @@
-- No change
+- Move `Marj::Jobs` interface into `Marj`.

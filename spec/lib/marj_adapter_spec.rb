@@ -16,7 +16,7 @@ describe MarjAdapter do
 
     it 'persists scheduled_at' do
       subject
-      expect(Marj::Jobs.next.scheduled_at.to_i).to eq(timestamp)
+      expect(Marj.next.scheduled_at.to_i).to eq(timestamp)
     end
 
     context 'when timestamp is nil' do
@@ -29,7 +29,7 @@ describe MarjAdapter do
 
       it 'does not persist scheduled_at' do
         subject
-        expect(Marj::Jobs.next.scheduled_at).to be_nil
+        expect(Marj.next.scheduled_at).to be_nil
       end
     end
 
@@ -41,7 +41,7 @@ describe MarjAdapter do
 
       it 'updates the record' do
         subject
-        expect(Marj::Jobs.next.executions).to eq(99)
+        expect(Marj.next.executions).to eq(99)
       end
     end
   end
@@ -58,17 +58,17 @@ describe MarjAdapter do
 
     it 'does not persist scheduled_at' do
       subject
-      expect(Marj::Jobs.next.scheduled_at).to be_nil
+      expect(Marj.next.scheduled_at).to be_nil
     end
 
     it 'registers callbacks' do
       subject
-      expect { job.perform_now }.to change(Marj::Jobs, :count).from(1).to(0)
+      expect { job.perform_now }.to change(Marj, :count).from(1).to(0)
     end
 
     it 'registers callbacks' do
       subject
-      expect { job.perform_now }.to change(Marj::Jobs, :count).from(1).to(0)
+      expect { job.perform_now }.to change(Marj, :count).from(1).to(0)
     end
 
     context 'when the job already exists' do
@@ -79,7 +79,7 @@ describe MarjAdapter do
 
       it 'updates the record' do
         subject
-        expect(Marj::Jobs.next.executions).to eq(99)
+        expect(Marj.next.executions).to eq(99)
       end
     end
   end

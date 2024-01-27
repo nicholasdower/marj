@@ -68,7 +68,7 @@ describe 'Enqueueing' do
       subject { TestJob.new('1').enqueue }
 
       it 'inserts a database record' do
-        expect { subject }.to change(Marj::Jobs, :count).from(0).to(1)
+        expect { subject }.to change(Marj, :count).from(0).to(1)
       end
 
       it 'persists the job arguments' do

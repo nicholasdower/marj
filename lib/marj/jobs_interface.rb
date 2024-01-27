@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Marj
-  # The interface provided by {Marj::Jobs} and {Marj::Relation}. Include to create a custom jobs interface.
+  # The interface provided by {Marj} and {Marj::Relation}. Include to create a custom jobs interface.
   #
   # To create a jobs interface for all job classes:
   #   class ApplicationJob < ActiveJob::Base

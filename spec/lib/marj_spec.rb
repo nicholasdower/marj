@@ -26,7 +26,7 @@ describe Marj do
     context 'when callbacks already registered' do
       it 'raises' do
         job = TestJob.perform_later
-        expect { Marj.send(:register_callbacks, job, Marj::Jobs.next) }
+        expect { Marj.send(:register_callbacks, job, Marj.next) }
           .to raise_error(RuntimeError, /already registered/)
       end
 
@@ -35,7 +35,7 @@ describe Marj do
 
         expect(job.singleton_class).not_to receive(:after_perform)
         expect(job.singleton_class).not_to receive(:after_discard)
-        Marj.send(:register_callbacks, job, Marj::Jobs.next) rescue nil
+        Marj.send(:register_callbacks, job, Marj.next) rescue nil
       end
     end
   end

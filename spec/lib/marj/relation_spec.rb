@@ -5,7 +5,7 @@ require 'pp'
 
 describe Marj::Relation do
   describe '#where' do
-    subject { Marj::Jobs.where(priority: 1).where(queue_name: 'foo') }
+    subject { Marj.where(priority: 1).where(queue_name: 'foo') }
 
     it 'returns a Marj::Relation with the added criteria' do
       job1 = TestJob.set(queue: 'foo', priority: 1).perform_later
@@ -30,7 +30,7 @@ describe Marj::Relation do
     end
 
     context 'without limit' do
-      subject { Marj::Jobs.where(priority: 2).next }
+      subject { Marj.where(priority: 2).next }
 
       it 'returns the next matching job' do
         expect(subject).to be_a(TestJob)
@@ -39,7 +39,7 @@ describe Marj::Relation do
     end
 
     context 'with limit' do
-      subject { Marj::Jobs.where(priority: 2).next(2) }
+      subject { Marj.where(priority: 2).next(2) }
 
       it 'returns the next N matching jobs' do
         expect(subject.map(&:class)).to eq([TestJob, TestJob])
@@ -49,7 +49,7 @@ describe Marj::Relation do
   end
 
   describe '#count' do
-    subject { Marj::Jobs.where(priority: 2).count }
+    subject { Marj.where(priority: 2).count }
 
     it 'returns the number of matching job' do
       TestJob.set(queue: 'foo', priority: 1).perform_later
@@ -64,7 +64,7 @@ describe Marj::Relation do
 
   describe '#queue' do
     context 'when one queue is specified' do
-      subject { Marj::Jobs.where(priority: 1).queue('foo') }
+      subject { Marj.where(priority: 1).queue('foo') }
 
       it 'returns matching jobs' do
         job1 = TestJob.set(priority: 1, queue: 'foo').perform_later
@@ -76,7 +76,7 @@ describe Marj::Relation do
     end
 
     context 'when one queue is specified' do
-      subject { Marj::Jobs.where(priority: 1).queue('foo', 'bar') }
+      subject { Marj.where(priority: 1).queue('foo', 'bar') }
 
       it 'returns jobs with the specified queue_name' do
         job1 = TestJob.set(priority: 1, queue: 'foo').perform_later
@@ -92,7 +92,7 @@ describe Marj::Relation do
   end
 
   describe '#due' do
-    subject { Marj::Jobs.where(priority: 2).due }
+    subject { Marj.where(priority: 2).due }
 
     it 'returns the matching job' do
       TestJob.set(priority: 1).perform_later
@@ -107,7 +107,7 @@ describe Marj::Relation do
   end
 
   describe '#perform_all' do
-    subject { Marj::Jobs.where(priority: 2).perform_all }
+    subject { Marj.where(priority: 2).perform_all }
 
     context 'when matching jobs exist' do
       context 'without batch_size' do
@@ -132,7 +132,7 @@ describe Marj::Relation do
       end
 
       context 'with batch_size' do
-        subject { Marj::Jobs.where(priority: 2).perform_all(batch_size: 2) }
+        subject { Marj.where(priority: 2).perform_all(batch_size: 2) }
 
         let(:ar_relation) { instance_double(ActiveRecord::Relation) }
 
@@ -165,7 +165,7 @@ describe Marj::Relation do
   end
 
   describe '#discard_all' do
-    subject { Marj::Jobs.where(priority: 2).discard_all }
+    subject { Marj.where(priority: 2).discard_all }
 
     context 'when matching jobs exist' do
       before do
@@ -192,7 +192,7 @@ describe Marj::Relation do
   end
 
   context 'Enumerable' do
-    subject { Marj::Jobs.where(priority: 2).each { TestJob.runs << _1 } }
+    subject { Marj.where(priority: 2).each { TestJob.runs << _1 } }
 
     it 'yields job objects' do
       TestJob.set(priority: 2, queue: 'foo').perform_later
@@ -205,7 +205,7 @@ describe Marj::Relation do
   end
 
   describe '#pretty_print' do
-    subject { PP.pp(Marj::Jobs.all, StringIO.new).string }
+    subject { PP.pp(Marj.all, StringIO.new).string }
 
     before { TestJob.perform_later(1) }
 

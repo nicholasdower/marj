@@ -80,28 +80,28 @@ SomeJob.queue_adapter = :marj                        # Single job
 
 ## Jobs Interface
 
-`Marj::Jobs` provides a query interface (`Marj::JobsInterface`) which can be
+`Marj` provides a query interface (`Marj::JobsInterface`) which can be
 used to retrieve, execute and discard enqueued jobs. It returns, yields and
 accepts `ActiveJob` objects rather than `ActiveRecord` objects. Jobs are
 orderd by due date. To query the database directly, use `Marj::Record`.
 
 ```ruby
-Marj::Jobs.all         # Returns all enqueued jobs.
-Marj::Jobs.queue       # Returns jobs in the specified queue(s).
-Marj::Jobs.due         # Returns jobs which are due to be executed.
-Marj::Jobs.next        # Returns the next job(s) to be executed.
-Marj::Jobs.count       # Returns the number of enqueued jobs.
-Marj::Jobs.where       # Returns jobs matching the specified criteria.
-Marj::Jobs.perform_all # Executes all jobs.
-Marj::Jobs.discard_all # Discards all jobs.
-Marj::Jobs.discard     # Discards the specified job.
+Marj.all         # Returns all enqueued jobs.
+Marj.queue       # Returns jobs in the specified queue(s).
+Marj.due         # Returns jobs which are due to be executed.
+Marj.next        # Returns the next job(s) to be executed.
+Marj.count       # Returns the number of enqueued jobs.
+Marj.where       # Returns jobs matching the specified criteria.
+Marj.perform_all # Executes all jobs.
+Marj.discard_all # Discards all jobs.
+Marj.discard     # Discards the specified job.
 ```
 
 `all`, `queue`, `due` and `where` return a `Marj::Relation` which provides
 the same `Marj::JobsInterface`. This can be used to chain query methods like:
 
 ```ruby
-Marj::Jobs.due.where(job_class: SomeJob).next
+Marj.due.where(job_class: SomeJob).next
 ```
 
 Note that the `Marj::JobsInterface` can be added to any class or module. For
@@ -133,20 +133,20 @@ job = SomeJob.perform_later('foo')
 job.perform_now
 
 # Retrieve and execute a job
-Marj::Jobs.due.next.perform_now
+Marj.due.next.perform_now
 
 # Run all due jobs (single DB query)
-Marj::Jobs.due.perform_all
+Marj.due.perform_all
 
 # Run all due jobs (multiple DB queries)
-Marj::Jobs.due.perform_all(batch_size: 1)
+Marj.due.perform_all(batch_size: 1)
 
 # Run all due jobs in a specific queue:
-Marj::Jobs.queue('foo').due.perform_all
+Marj.queue('foo').due.perform_all
 
 # Run all jobs indefinitely, as they become due:
 loop do
-  Marj::Jobs.due.perform_all rescue logger.error($!)
+  Marj.due.perform_all rescue logger.error($!)
 ensure
   sleep 5.seconds
 end
@@ -221,7 +221,7 @@ By default, jobs enqeued during tests will be written to the database. Enqueued
 jobs can be executed via:
 
 ```ruby
-Marj::Jobs.due.perform_all
+Marj.due.perform_all
 ```
 
 Alternatively, to use [ActiveJob::QueueAdapters::TestAdapter](https://api.rubyonrails.org/classes/ActiveJob/QueueAdapters/TestAdapter.html):

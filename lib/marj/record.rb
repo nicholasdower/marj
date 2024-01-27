@@ -10,7 +10,7 @@ module Marj
   # See https://github.com/nicholasdower/marj
   class Record < ActiveRecord::Base
     include Marj::RecordInterface
-    extend Marj::RecordInterface::ClassMethods # Added explicitly to generate docs
+    extend Marj::RecordInterface::ClassMethods # Extended explicitly to generate docs
 
     self.table_name = 'jobs'
   end
