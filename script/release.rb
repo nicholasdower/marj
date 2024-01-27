@@ -7,8 +7,6 @@ require 'fileutils'
 require 'net/http'
 require 'open3'
 
-require_relative '../lib/marj'
-
 VERSION_REGEX = /^(0|[1-9][0-9]*)[.](0|[1-9][0-9]*)[.](0|[1-9][0-9]*)?$/.freeze
 PRE_VERSION_REGEX = /^(0|[1-9][0-9]*)[.](0|[1-9][0-9]*)[.](0|[1-9][0-9]*)(?:[.]pre)?$/.freeze
 
