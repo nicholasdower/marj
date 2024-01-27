@@ -186,6 +186,30 @@ describe Marj::Jobs do
     end
   end
 
+  describe '.queue' do
+    context 'when one queue is specified' do
+      subject { Marj::Jobs.queue('foo') }
+
+      it 'returns jobs with the specified queue_name' do
+        job1 = TestJob.set(queue: 'foo').perform_later
+        job2 = TestJob.set(queue: 'foo').perform_later
+        TestJob.set(queue: 'bar').perform_later
+        expect(subject.map(&:job_id)).to contain_exactly(job1.job_id, job2.job_id)
+      end
+    end
+
+    context 'when one queue is specified' do
+      subject { Marj::Jobs.queue('foo', 'bar') }
+
+      it 'returns jobs with the specified queue_name' do
+        job1 = TestJob.set(queue: 'foo').perform_later
+        job2 = TestJob.set(queue: 'bar').perform_later
+        TestJob.set(queue: 'baz').perform_later
+        expect(subject.map(&:job_id)).to contain_exactly(job1.job_id, job2.job_id)
+      end
+    end
+  end
+
   describe '.ready' do
     it 'returns jobs where scheduled_at is null' do
       TestJob.set(queue: '1').perform_later

@@ -93,6 +93,35 @@ describe Marj::Relation do
     end
   end
 
+  describe '#queue' do
+    context 'when one queue is specified' do
+      subject { Marj::Jobs.where(priority: 1).queue('foo') }
+
+      it 'returns matching jobs' do
+        job1 = TestJob.set(priority: 1, queue: 'foo').perform_later
+        job2 = TestJob.set(priority: 1, queue: 'foo').perform_later
+        TestJob.set(priority: 2, queue: 'foo').perform_later
+        TestJob.set(priority: 1, queue: 'bar').perform_later
+        expect(subject.map(&:job_id)).to contain_exactly(job1.job_id, job2.job_id)
+      end
+    end
+
+    context 'when one queue is specified' do
+      subject { Marj::Jobs.where(priority: 1).queue('foo', 'bar') }
+
+      it 'returns jobs with the specified queue_name' do
+        job1 = TestJob.set(priority: 1, queue: 'foo').perform_later
+        job2 = TestJob.set(priority: 1, queue: 'foo').perform_later
+        TestJob.set(priority: 2, queue: 'foo').perform_later
+        job4 = TestJob.set(priority: 1, queue: 'bar').perform_later
+        TestJob.set(priority: 2, queue: 'bar').perform_later
+        TestJob.set(priority: 1, queue: 'baz').perform_later
+        TestJob.set(priority: 2, queue: 'baz').perform_later
+        expect(subject.map(&:job_id)).to contain_exactly(job1.job_id, job2.job_id, job4.job_id)
+      end
+    end
+  end
+
   describe '#ready' do
     subject { Marj::Jobs.where(priority: 2).ready }
 
