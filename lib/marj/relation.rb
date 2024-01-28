@@ -8,52 +8,12 @@ module Marj
     include Enumerable
     include Marj::JobsInterface
 
-    # Returns a Marj::Relation which wraps the specified +ActiveRecord+ relation.
+    attr_reader :all
+    private :all
+
+    # Returns a {Marj::Relation} which wraps the specified +ActiveRecord+ relation.
     def initialize(ar_relation)
-      @ar_relation = ar_relation
-    end
-
-    # (see Marj::JobsInterface#queue)
-    def queue(queue, *queues)
-      Marj::Relation.new(@ar_relation.where(queue_name: queues.dup.unshift(queue)))
-    end
-
-    # (see Marj::JobsInterface#next)
-    def next(limit = nil)
-      @ar_relation.first(limit)&.then { _1.is_a?(Array) ? _1.map(&:as_job) : _1.as_job }
-    end
-
-    # (see Marj::JobsInterface#count)
-    def count(column_name = nil, &block)
-      block_given? ? @ar_relation.count(column_name) { |r| block.call(r.as_job) } : @ar_relation.count(column_name)
-    end
-
-    # (see Marj::JobsInterface#where)
-    def where(*args)
-      Marj::Relation.new(@ar_relation.where(*args))
-    end
-
-    # (see Marj::JobsInterface#due)
-    def due
-      Marj::Relation.new(@ar_relation.due)
-    end
-
-    # (see Marj::JobsInterface#perform_all)
-    def perform_all(batch_size: nil)
-      if batch_size
-        [].tap do |results|
-          while (jobs = @ar_relation.limit(batch_size).map(&:as_job)).any?
-            results.concat(jobs.map { |job| ActiveJob::Callbacks.run_callbacks(:execute) { job.perform_now } })
-          end
-        end
-      else
-        @ar_relation.map(&:as_job).map { |job| ActiveJob::Callbacks.run_callbacks(:execute) { job.perform_now } }
-      end
-    end
-
-    # (see Marj::JobsInterface#discard_all)
-    def discard_all
-      @ar_relation.delete_all
+      @all = ar_relation
     end
 
     # Yields each job in this relation.
@@ -61,7 +21,7 @@ module Marj
     # @param block [Proc]
     # @return [Array] the jobs in this relation
     def each(&block)
-      @ar_relation.map(&:as_job).each(&block)
+      all.map(&:as_job).each(&block)
     end
 
     # Provides +pretty_inspect+ output containing arrays of jobs rather than arrays of records, similar to the output
