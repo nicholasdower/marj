@@ -135,7 +135,7 @@ Query methods can also be chained:
 Marj.due.where(job_class: SomeJob).next # Returns the next SomeJob that is due
 ```
 
-# Custom Jobs Interface
+## Custom Jobs Interface
 
 The `Marj::JobsInterface` can be added to any class or module. For example, to
 add it to all jobs classes:
