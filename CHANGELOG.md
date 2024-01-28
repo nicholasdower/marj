@@ -1,3 +1,7 @@
+## 4.1.0
+
+- Deserialize arguments immediately rather than lazily.
+
 ## 4.0.0
 
 - Move `Marj::Jobs` interface into `Marj`.

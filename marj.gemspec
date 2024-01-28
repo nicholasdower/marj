@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-version = '5.0.0.pre'
+version = '4.1.0'
 
 Gem::Specification.new do |spec|
   spec.name          = 'marj'
