@@ -158,11 +158,10 @@ ApplicationJob.due # Returns all jobs which are due to be executed.
 SomeJob.due        # Returns SomeJobs which are due to be executed.
 ```
 
-## Customization
+## Multiple Tables
 
-It is possible to create a custom record class and jobs interface. This enables,
-for instance, writing jobs to multiple databases/tables within a single
-application.
+It is possible to create a custom record class in order to, for instance,
+write jobs to multiple databases/tables within a single application.
 
 ```ruby
 class CreateMyJobs < ActiveRecord::Migration[7.1]
