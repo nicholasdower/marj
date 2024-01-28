@@ -24,6 +24,13 @@ def update_version(version)
     'marj.gemspec',
     File.read('marj.gemspec').sub(/^version = '.*'$/, "version = '#{version}'")
   )
+  File.write(
+    'README.md',
+    File.read('README.md').sub(
+      /^API docs:.*$/,
+      "API docs: https://gemdocs.org/gems/marj/#{version}/ <br>"
+    )
+  )
 end
 
 fail('you must set VERSION') unless ENV['VERSION']
