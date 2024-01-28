@@ -4,7 +4,7 @@ A minimal database-backed ActiveJob queueing backend.
 
 ## Quick Links
 
-API docs: https://www.rubydoc.info/github/nicholasdower/marj <br>
+API docs: https://gemdocs.org/gems/marj/latest <br>
 RubyGems: https://rubygems.org/gems/marj <br>
 Changelog: https://github.com/nicholasdower/marj/releases <br>
 Issues: https://github.com/nicholasdower/marj/issues <br>
