@@ -1,2 +1,1 @@
-- Move `Marj::Jobs` interface into `Marj`.
-- Remove `Marj::RecordInterface`. To create a custom record class, extend `Marj::Record`.
+- No change

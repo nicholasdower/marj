@@ -1,3 +1,8 @@
+## 4.0.0
+
+- Move `Marj::Jobs` interface into `Marj`.
+- Remove `Marj::RecordInterface`. To create a custom record class, extend `Marj::Record`.
+
 ## 3.0.0
 
 - Fixed a bug to support the case where a job is enqueued, deleted, then reenqueued via a new reference to the existing job instance.
