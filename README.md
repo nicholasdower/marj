@@ -108,7 +108,7 @@ ensure
 end
 ```
 
-# Jobs Interface
+## Jobs Interface
 
 The `Marj` module provides methods for interacting with enqueued jobs. These
 methods accept, return and yield +ActiveJob+ objects rather than +ActiveRecord+
