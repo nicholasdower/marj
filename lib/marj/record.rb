@@ -4,9 +4,7 @@ require 'active_job'
 require 'active_record'
 
 module Marj
-  # The Marj ActiveRecord model class.
-  #
-  # See https://github.com/nicholasdower/marj
+  # The default +ActiveRecord+ class.
   class Record < ActiveRecord::Base
     self.table_name = Marj.table_name
 

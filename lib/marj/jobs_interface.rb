@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 module Marj
-  # The interface provided by {Marj} and {Marj::Relation}. Include to create a custom jobs interface.
+  # The interface provided by {Marj} and {Marj::Relation}.
   #
-  # To create a jobs interface for all job classes:
+  # To create a custom jobs interface, for example for all job classes in your application:
   #   class ApplicationJob < ActiveJob::Base
   #     extend Marj::JobsInterface
   #
@@ -12,10 +12,19 @@ module Marj
   #     end
   #   end
   #
-  #   ApplicationJob.next
-  #   SomeJob.next
+  #   class SomeJob < ApplicationJob
+  #     def perform(msg)
+  #       puts msg
+  #     end
+  #   end
   #
-  # To create a jobs interface for a single job class:
+  # This will allow you to query jobs via the +ApplicationJob+ class:
+  #   ApplicationJob.next # Returns the next job of any type
+  #
+  # Or to query jobs via a specific job class:
+  #   SomeJob.next # Returns the next SomeJob
+  #
+  # Alternatively, to create a jobs interface for a single job class:
   #   class SomeJob < ActiveJob::Base
   #     extend Marj::JobsInterface
   #
@@ -23,8 +32,6 @@ module Marj
   #       Marj::Relation.new(Marj::Record.where(job_class: self).ordered)
   #     end
   #   end
-  #
-  #   SomeJob.next
   module JobsInterface
     def self.included(clazz)
       return if clazz == Marj::Relation

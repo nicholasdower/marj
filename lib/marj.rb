@@ -6,9 +6,26 @@ require_relative 'marj/relation'
 
 # A minimal database-backed ActiveJob queueing backend.
 #
-# The {Marj} module extends the {Marj::JobsInterface} module to provide methods for querying, performing and discarding
-# jobs. These methods accept, return and yield +ActiveJob+ objects rather than +ActiveRecord+ objects. To query the
-# database directly, use {Marj::Record}.
+# The {Marj} module extends {Marj::JobsInterface} to provide methods for interacting with enqueued jobs. These methods
+# accept, return and yield +ActiveJob+ objects rather than +ActiveRecord+ objects. Returned jobs are ordered by due
+# date. To query the database directly, use {Record}.
+#
+# Example usage:
+#   Marj.all         # Returns all enqueued jobs.
+#   Marj.queue       # Returns jobs in the specified queue(s).
+#   Marj.due         # Returns jobs which are due to be executed.
+#   Marj.next        # Returns the next job(s) to be executed.
+#   Marj.count       # Returns the number of enqueued jobs.
+#   Marj.where       # Returns jobs matching the specified criteria.
+#   Marj.perform_all # Executes all jobs.
+#   Marj.discard_all # Discards all jobs.
+#   Marj.discard     # Discards the specified job.
+#
+# Query methods can also be chained:
+#   Marj.due.where(job_class: SomeJob).next # Returns the next SomeJob that is due
+#
+# Note that by default, Marj uses {Marj::Record} to interact with the +jobs+ table. To use a different record class, set
+# {record_class}. To simply override the table name, set {table_name} before loading +ActiveRecord+.
 #
 # See https://github.com/nicholasdower/marj
 module Marj
@@ -26,7 +43,8 @@ module Marj
     # @!attribute record_class
     #   The name of the +ActiveRecord+ class. Defaults to +Marj::Record+.
     #   @return [Class, String]
-    attr_accessor :record_class
+
+    attr_writer :record_class
 
     def record_class
       @record_class = @record_class.is_a?(String) ? @record_class.constantize : @record_class
@@ -95,7 +113,7 @@ module Marj
     # Enqueue a job for execution at the specified time.
     #
     # @param job [ActiveJob::Base] the job to enqueue
-    # @param record_class [Class] the +ActiveRecord+ model class
+    # @param record_class [Class] the +ActiveRecord+ class
     # @param time [Time, NilClass] optional time at which to execute the job
     # @return [ActiveJob::Base] the enqueued job
     def enqueue(job, record_class, time = nil)

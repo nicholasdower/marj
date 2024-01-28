@@ -135,6 +135,9 @@ release:
 doc:
 	@yard --fail-on-warning
 
+.PHONY: docs
+docs: doc
+
 .PHONY: doc-check
 doc-check:
 	@yard stats --list-undoc | grep '100.00% documented' > /dev/null

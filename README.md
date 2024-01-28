@@ -39,7 +39,7 @@ bundle add activejob activerecord marj
 gem install activejob activerecord marj
 ```
 
-### 3. Create the jobs table
+### 3. Create the database table
 
 ```ruby
 class CreateJobs < ActiveRecord::Migration[7.1]
@@ -68,6 +68,9 @@ class CreateJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
+Note that by default, Marj uses a table named `jobs`. To override the default
+table name, set `Marj.table_name` before loading `ActiveRecord`.
+
 ### 4. Configure the queue adapter
 
 ```ruby
@@ -80,10 +83,10 @@ SomeJob.queue_adapter = :marj                        # Single job
 
 ## Jobs Interface
 
-`Marj` provides a query interface (`Marj::JobsInterface`) which can be
-used to retrieve, execute and discard enqueued jobs. It returns, yields and
-accepts `ActiveJob` objects rather than `ActiveRecord` objects. Jobs are
-orderd by due date. To query the database directly, use `Marj::Record`.
+The `Marj` module extends `Marj::JobsInterface` to provide methods for
+interacting with enqueued jobs. These methods accept, return and yield
++ActiveJob+ objects rather than +ActiveRecord+ objects. Returned jobs
+are orderd by due date. To query the database directly, use `Marj::Record`.
 
 ```ruby
 Marj.all         # Returns all enqueued jobs.
@@ -97,11 +100,10 @@ Marj.discard_all # Discards all jobs.
 Marj.discard     # Discards the specified job.
 ```
 
-`all`, `queue`, `due` and `where` return a `Marj::Relation` which provides
-the same `Marj::JobsInterface`. This can be used to chain query methods like:
+Query methods can also be chained:
 
 ```ruby
-Marj.due.where(job_class: SomeJob).next
+Marj.due.where(job_class: SomeJob).next # Returns the next SomeJob that is due
 ```
 
 Note that the `Marj::JobsInterface` can be added to any class or module. For
@@ -190,20 +192,15 @@ end
 
 CreateMyJobs.migrate(:up)
 
-class ApplicationJob < ActiveJob::Base
+class MyJob < ActiveJob::Base
   self.queue_adapter = MarjAdapter.new('MyRecord')
 
   extend Marj::JobsInterface
 
   def self.all
-    Marj::Relation.new(
-      self == ApplicationJob ?
-        MyRecord.ordered : MyRecord.where(job_class: self)
-    )
+    Marj::Relation.new(MyRecord.all)
   end
-end
 
-class MyJob < ApplicationJob
   def perform(msg)
     puts msg
   end
