@@ -2,7 +2,6 @@
 
 require_relative 'marj_adapter'
 require_relative 'marj/jobs_interface'
-require_relative 'marj/record_interface'
 require_relative 'marj/relation'
 
 # A minimal database-backed ActiveJob queueing backend.

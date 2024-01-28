@@ -26,12 +26,8 @@ describe 'Custom Record' do
       end
     end
 
-    stub_const('MyRecord', Class.new(ActiveRecord::Base))
-    MyRecord.class_eval do
-      include Marj::RecordInterface
-
-      self.table_name = 'my_jobs'
-    end
+    stub_const('MyRecord', Class.new(Marj::Record))
+    MyRecord.table_name = 'my_jobs'
 
     CreateMyJobs.migrate(:up)
 
