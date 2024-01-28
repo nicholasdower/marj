@@ -17,7 +17,7 @@ Development: https://github.com/nicholasdower/marj/blob/master/CONTRIBUTING.md
 - Failed jobs which should be retried are updated in the database.
 - Failed jobs which should not be retried are deleted from the database.
 - An interface is provided to retrieve, execute, discard and re-enqueue jobs.
-- An `ActiveRecord` model class is provided to query the database directly.
+- An `ActiveRecord` class is provided to query the database directly.
 
 ## Features Not Provided
 
@@ -81,52 +81,6 @@ ActiveJob::Base.queue_adapter = :marj                # Globally, without Rails
 SomeJob.queue_adapter = :marj                        # Single job
 ```
 
-## Jobs Interface
-
-The `Marj` module extends `Marj::JobsInterface` to provide methods for
-interacting with enqueued jobs. These methods accept, return and yield
-+ActiveJob+ objects rather than +ActiveRecord+ objects. Returned jobs
-are orderd by due date. To query the database directly, use `Marj::Record`.
-
-```ruby
-Marj.all         # Returns all enqueued jobs.
-Marj.queue       # Returns jobs in the specified queue(s).
-Marj.due         # Returns jobs which are due to be executed.
-Marj.next        # Returns the next job(s) to be executed.
-Marj.count       # Returns the number of enqueued jobs.
-Marj.where       # Returns jobs matching the specified criteria.
-Marj.perform_all # Executes all jobs.
-Marj.discard_all # Discards all jobs.
-Marj.discard     # Discards the specified job.
-```
-
-Query methods can also be chained:
-
-```ruby
-Marj.due.where(job_class: SomeJob).next # Returns the next SomeJob that is due
-```
-
-Note that the `Marj::JobsInterface` can be added to any class or module. For
-example, to add it to all jobs classes:
-
-```ruby
-class ApplicationJob < ActiveJob::Base
-  extend Marj::JobsInterface
-
-  def self.all
-    Marj::Relation.new(
-      self == ApplicationJob ?
-        Marj::Record.ordered : Marj::Record.where(job_class: self)
-   )
-  end
-end
-
-class SomeJob < ApplicationJob; end
-
-ApplicationJob.due # Returns all jobs which are due to be executed.
-SomeJob.due        # Returns SomeJobs which are due to be executed.
-```
-
 ## Example Usage
 
 ```ruby
@@ -146,12 +100,62 @@ Marj.due.perform_all(batch_size: 1)
 # Run all due jobs in a specific queue:
 Marj.queue('foo').due.perform_all
 
-# Run all jobs indefinitely, as they become due:
+# Run jobs as they become due:
 loop do
   Marj.due.perform_all rescue logger.error($!)
 ensure
   sleep 5.seconds
 end
+```
+
+# Jobs Interface
+
+The `Marj` module provides methods for interacting with enqueued jobs. These
+methods accept, return and yield +ActiveJob+ objects rather than +ActiveRecord+
+objects. Returned jobs are orderd by due date. To query the database directly,
+use `Marj::Record`.
+
+Example usage:
+
+```ruby
+Marj.all         # Returns all enqueued jobs.
+Marj.queue       # Returns jobs in the specified queue(s).
+Marj.due         # Returns jobs which are due to be executed.
+Marj.next        # Returns the next job(s) to be executed.
+Marj.count       # Returns the number of enqueued jobs.
+Marj.where       # Returns jobs matching the specified criteria.
+Marj.perform_all # Executes all jobs.
+Marj.discard_all # Discards all jobs.
+Marj.discard     # Discards the specified job.
+```
+
+Query methods can also be chained:
+
+```ruby
+Marj.due.where(job_class: SomeJob).next # Returns the next SomeJob that is due
+```
+
+# Custom Jobs Interface
+
+The `Marj::JobsInterface` can be added to any class or module. For example, to
+add it to all jobs classes:
+
+```ruby
+class ApplicationJob < ActiveJob::Base
+  extend Marj::JobsInterface
+
+  def self.all
+    Marj::Relation.new(
+      self == ApplicationJob ?
+        Marj::Record.ordered : Marj::Record.where(job_class: self)
+   )
+  end
+end
+
+class SomeJob < ApplicationJob; end
+
+ApplicationJob.due # Returns all jobs which are due to be executed.
+SomeJob.due        # Returns SomeJobs which are due to be executed.
 ```
 
 ## Customization
@@ -160,7 +164,7 @@ It is possible to create a custom record class and jobs interface. This enables,
 for instance, writing jobs to multiple databases/tables within a single
 application.
 
-```
+```ruby
 class CreateMyJobs < ActiveRecord::Migration[7.1]
   def self.up
     create_table :my_jobs, id: :string, primary_key: :job_id do |table|
@@ -313,40 +317,48 @@ SomeJob.queue_adapter = FooAdapter.new             # Uses FooAdapter directly
 
 ### Configuration
 
-- `config.active_job.default_queue_name`
-- `config.active_job.queue_name_prefix`
-- `config.active_job.queue_name_delimiter`
-- `config.active_job.retry_jitter`
-- `SomeJob.queue_name`
-- `SomeJob.queue_as`
-- `SomeJob.queue_name_prefix`
-- `SomeJob.queue_name_delimiter`
-- `SomeJob.retry_jitter`
+```ruby
+config.active_job.default_queue_name
+config.active_job.queue_name_prefix
+config.active_job.queue_name_delimiter
+config.active_job.retry_jitter
+SomeJob.queue_name
+SomeJob.queue_as
+SomeJob.queue_name_prefix
+SomeJob.queue_name_delimiter
+SomeJob.retry_jitter
+```
 
 ### Options
 
-- `:wait` - Enqueues the job with the specified delay
-- `:wait_until` - Enqueues the job at the time specified
-- `:queue` - Enqueues the job on the specified queue
-- `:priority` - Enqueues the job with the specified priority
+```ruby
+:wait       # Enqueues the job with the specified delay
+:wait_until # Enqueues the job at the time specified
+:queue      # Enqueues the job on the specified queue
+:priority   # Enqueues the job with the specified priority
+```
 
 ### Callbacks
 
-- `SomeJob.before_enqueue`
-- `SomeJob.after_enqueue`
-- `SomeJob.around_enqueue`
-- `SomeJob.before_perform`
-- `SomeJob.after_perform`
-- `SomeJob.around_perform`
-- `ActiveJob::Callbacks.singleton_class.set_callback(:execute, :before, &block)`
-- `ActiveJob::Callbacks.singleton_class.set_callback(:execute, :after, &block)`
-- `ActiveJob::Callbacks.singleton_class.set_callback(:execute, :around, &block)`
+```ruby
+SomeJob.before_enqueue
+SomeJob.after_enqueue
+SomeJob.around_enqueue
+SomeJob.before_perform
+SomeJob.after_perform
+SomeJob.around_perform
+ActiveJob::Callbacks.singleton_class.set_callback(:execute, :before, &block)
+ActiveJob::Callbacks.singleton_class.set_callback(:execute, :after, &block)
+ActiveJob::Callbacks.singleton_class.set_callback(:execute, :around, &block)
+```
 
 ### Handling Exceptions
 
-- `SomeJob.retry_on`
-- `SomeJob.discard_on`
-- `SomeJob.after_discard`
+```ruby
+SomeJob.retry_on
+SomeJob.discard_on
+SomeJob.after_discard
+```
 
 ### Creating Jobs
 

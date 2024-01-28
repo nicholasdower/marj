@@ -6,9 +6,9 @@ require_relative 'marj/relation'
 
 # A minimal database-backed ActiveJob queueing backend.
 #
-# The {Marj} module extends {Marj::JobsInterface} to provide methods for interacting with enqueued jobs. These methods
-# accept, return and yield +ActiveJob+ objects rather than +ActiveRecord+ objects. Returned jobs are ordered by due
-# date. To query the database directly, use {Record}.
+# The {Marj} module provides methods for interacting with enqueued jobs. These methods accept, return and yield
+# +ActiveJob+ objects rather than +ActiveRecord+ objects. Returned jobs are ordered by due date. To query the database
+# directly, use {Record}.
 #
 # Example usage:
 #   Marj.all         # Returns all enqueued jobs.
