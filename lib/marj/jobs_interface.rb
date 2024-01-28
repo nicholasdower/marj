@@ -8,7 +8,10 @@ module Marj
   #     extend Marj::JobsInterface
   #
   #     def self.all
-  #       Marj::Relation.new(self == ApplicationJob ? Marj::Record.ordered : Marj::Record.where(job_class: self))
+  #       Marj::Relation.new(
+  #         self == ApplicationJob ?
+  #           Marj::Record.ordered : Marj::Record.where(job_class: self).ordered
+  #       )
   #     end
   #   end
   #

@@ -38,7 +38,7 @@ describe 'Custom Record' do
       extend Marj::JobsInterface
 
       def self.all
-        Marj::Relation.new(self == MyApplicationJob ? MyRecord.ordered : MyRecord.where(job_class: self))
+        Marj::Relation.new(self == MyApplicationJob ? MyRecord.ordered : MyRecord.where(job_class: self).ordered)
       end
 
       @runs = []

@@ -147,7 +147,7 @@ class ApplicationJob < ActiveJob::Base
   def self.all
     Marj::Relation.new(
       self == ApplicationJob ?
-        Marj::Record.ordered : Marj::Record.where(job_class: self)
+        Marj::Record.ordered : Marj::Record.where(job_class: self).ordered
    )
   end
 end
@@ -201,7 +201,7 @@ class MyJob < ActiveJob::Base
   extend Marj::JobsInterface
 
   def self.all
-    Marj::Relation.new(MyRecord.all)
+    Marj::Relation.new(MyRecord.ordered)
   end
 
   def perform(msg)
