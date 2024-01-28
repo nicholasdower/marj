@@ -87,7 +87,15 @@ module Marj
       # ActiveJob::Base#deserialize expects dates to be strings rather than Time objects.
       job_data = job_data.to_h { |k, v| [k, %w[enqueued_at scheduled_at].include?(k) ? v&.iso8601 : v] }
 
-      job.tap { job.deserialize(job_data) }
+      job.deserialize(job_data)
+
+      # ActiveJob deserializes arguments on demand when a job is performed. Until then they are empty. That's strange.
+      # Instead, deserialize them now. Also, clear `serialized_arguments` to prevent ActiveJob from overwriting changes
+      # to arguments when serializing later.
+      job.arguments = record.arguments
+      job.serialized_arguments = nil
+
+      job
     end
 
     # Registers callbacks for the given job which destroy the given database record when the job succeeds or is

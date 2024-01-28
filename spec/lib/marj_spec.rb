@@ -7,7 +7,7 @@ describe Marj do
     subject { Marj.send(:to_job, record) }
 
     let(:record) { Marj::Record.first }
-    let(:job) { TestJob.perform_later }
+    let(:job) { TestJob.perform_later('foo') }
 
     before { job }
 

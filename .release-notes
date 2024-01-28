@@ -1,1 +1,1 @@
-- No change
+- Deserialize arguments immediately rather than lazily.
