@@ -7,8 +7,7 @@ require 'awesome_print'
 require 'fileutils'
 require 'logger'
 
-Dir.glob('lib/**/*.rb').each { |file| require_relative "../#{file}" }
-
+require_relative '../lib/marj'
 require_relative '../spec/support/test_job'
 
 ActiveJob::Base.queue_adapter = :marj

@@ -8,7 +8,7 @@ module Marj
   #
   # See https://github.com/nicholasdower/marj
   class Record < ActiveRecord::Base
-    self.table_name = 'jobs'
+    self.table_name = Marj.table_name
 
     # Order by +enqueued_at+ rather than +job_id+ (the default).
     self.implicit_order_column = 'enqueued_at'

@@ -17,14 +17,31 @@ module Marj
 
   Kernel.autoload(:Record, File.expand_path(File.join('marj', 'record.rb'), __dir__))
 
+  @table_name = :jobs
+  @record_class = 'Marj::Record'
+
   class << self
     include Marj::JobsInterface
+
+    # @!attribute record_class
+    #   The name of the +ActiveRecord+ class. Defaults to +Marj::Record+.
+    #   @return [Class, String]
+    attr_accessor :record_class
+
+    def record_class
+      @record_class = @record_class.is_a?(String) ? @record_class.constantize : @record_class
+    end
+
+    # @!attribute table_name
+    #   The name of the database table. Defaults to +:jobs+.
+    #   @return [Symbol, String]
+    attr_accessor :table_name
 
     # Returns a {Marj::Relation} for all jobs in the order they should be executed.
     #
     # @return [Marj::Relation]
     def all
-      Marj::Relation.new(Marj::Record.ordered)
+      Marj::Relation.new(Marj.record_class.ordered)
     end
 
     # Discards the specified job.
