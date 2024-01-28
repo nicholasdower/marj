@@ -15,6 +15,17 @@ def fail(msg)
   exit 1
 end
 
+def update_version(version)
+  File.write(
+    'lib/marj.rb',
+    File.read('lib/marj.rb').sub(/VERSION = .*/, "VERSION = '#{version}'")
+  )
+  File.write(
+    'marj.gemspec',
+    File.read('marj.gemspec').sub(/^version = '.*'$/, "version = '#{version}'")
+  )
+end
+
 fail('you must set VERSION') unless ENV['VERSION']
 fail('invalid VERSION') unless ENV['VERSION'].match(VERSION_REGEX)
 fail('you must set NEXT_VERSION') unless ENV['NEXT_VERSION']
@@ -34,10 +45,7 @@ puts "Gem file: #{gem_file}"
 puts "Notes:\n#{notes}\n\n"
 
 puts 'Updating version'
-File.write(
-  'lib/marj.rb',
-  File.read('lib/marj.rb').sub(/VERSION = .*/, "VERSION = '#{version}'")
-)
+update_version(version)
 
 `bundle install`
 `cd sample-rails-app && bundle install`
@@ -89,10 +97,7 @@ puts 'Tagging'
 fail('count not tag commit') unless $CHILD_STATUS.success?
 
 puts 'Updating version'
-File.write(
-  'lib/marj.rb',
-  File.read('lib/marj.rb').sub(/VERSION = .*/, "VERSION = '#{next_version}'")
-)
+update_version(next_version)
 
 `bundle install`
 `cd sample-rails-app && bundle install`

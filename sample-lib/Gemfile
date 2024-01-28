@@ -2,7 +2,5 @@
 
 source 'https://rubygems.org'
 
-marj_version = File.read('../lib/marj.rb').match(/VERSION = '([^']*)'/)[1]
-
-gem 'marj', marj_version, path: '../'
+gem 'marj', path: '../'
 gem 'sqlite3', '~> 1.4'

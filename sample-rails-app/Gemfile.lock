@@ -206,7 +206,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  marj (= 5.0.0.pre)!
+  marj!
   rails (~> 7.1.3)
   sqlite3 (~> 1.4)
 
