@@ -29,7 +29,7 @@ module Marj
     # Returns a {Marj::Relation} for jobs in the specified queue(s).
     #
     # @param queue [String, Symbol] the queue to query
-    # @param queues [Array<String, Array<Symbol>] more queues to query
+    # @param queues [Array<String>, Array<Symbol>] more queues to query
     # @return [Marj::Relation]
     def queue(queue, *queues)
       all.queue(queue, *queues)
