@@ -1,1 +1,1 @@
-- No change
+- Populate `enqueued_at` and `locale` when enqueueing.

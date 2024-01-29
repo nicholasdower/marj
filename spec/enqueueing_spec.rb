@@ -15,6 +15,14 @@ describe 'Enqueueing' do
         subject
         expect(Marj::Record.last.arguments.last).to eq('1')
       end
+
+      it 'sets enqueued_at' do
+        expect(subject.enqueued_at.to_s).to eq(Time.now.utc.to_s)
+      end
+
+      it 'sets locale' do
+        expect(subject.locale).to eq(I18n.locale.to_s)
+      end
     end
 
     context 'when an existing, updated job instance which references an existing record is enqueued' do
@@ -74,6 +82,14 @@ describe 'Enqueueing' do
       it 'persists the job arguments' do
         subject
         expect(Marj::Record.last.arguments.last).to eq('1')
+      end
+
+      it 'sets enqueued_at' do
+        expect(subject.enqueued_at.to_s).to eq(Time.now.utc.to_s)
+      end
+
+      it 'sets locale' do
+        expect(subject.locale).to eq(I18n.locale.to_s)
       end
     end
 

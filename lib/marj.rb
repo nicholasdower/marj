@@ -129,6 +129,11 @@ module Marj
       # Argument serialization is done by ActiveJob. ActiveRecord expects deserialized arguments.
       serialized = job.serialize.symbolize_keys!.without(:provider_job_id).merge(arguments: job.arguments)
 
+      # Serialize sets locale to I18n.locale.to_s and enqueued_at to Time.now.utc.iso8601(9).
+      # Update the job to reflect what is being enqueued.
+      job.locale = serialized[:locale]
+      job.enqueued_at = Time.iso8601(serialized[:enqueued_at]).utc
+
       # When a job is enqueued, we must create/update the corresponding database record. We also must ensure callbacks
       # are registered on the job instance so that when the job is executed, the database record is deleted or updated
       # (depending on the result).
