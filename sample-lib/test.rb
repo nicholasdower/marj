@@ -41,8 +41,8 @@ ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: 'storage/t
 ActiveRecord::Base.connection.drop_table(:jobs) if ActiveRecord::Base.connection.table_exists?(:jobs)
 CreateJobs.migrate(:up)
 
-Marj.discard_all
-raise 'Unexpected job found' unless Marj.count.zero?
+Marj.query(:delete_all)
+raise 'Unexpected job found' unless Marj::Record.count.zero?
 
 class TestJob < ActiveJob::Base
   retry_on Exception, wait: 10.seconds, attempts: 2
@@ -59,18 +59,18 @@ class TestJob < ActiveJob::Base
 end
 
 TestJob.perform_later('TestJob.runs << 1')
-raise 'Job not enqueued' unless Marj.count == 1
+raise 'Job not enqueued' unless Marj.query(:count) == 1
 
-Marj.next.perform_now
+Marj.query(:first).perform_now
 raise 'Job not executed' unless TestJob.runs == [1]
-raise 'Job not deleted' unless Marj.count.zero?
+raise 'Job not deleted' unless Marj.query(:count).zero?
 
 TestJob.perform_later('raise "hi"')
-raise 'Job not enqueued' unless Marj.next&.executions = 0
+raise 'Job not enqueued' unless Marj.query(:first)&.executions = 0
 
-Marj.next.perform_now
-raise 'Job not executed' unless (Marj.next.executions = 1)
+Marj.query(:first).perform_now
+raise 'Job not executed' unless (Marj.query(:first).executions = 1)
 
-Marj.next.perform_now rescue e = $ERROR_INFO
+Marj.query(:first).perform_now rescue e = $ERROR_INFO
 raise 'error not raised' unless e&.message == 'hi'
-raise 'Job not deleted' unless Marj.count.zero?
+raise 'Job not deleted' unless Marj.query(:count).zero?

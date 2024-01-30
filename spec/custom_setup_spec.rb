@@ -31,15 +31,11 @@ describe 'Custom Record' do
 
     CreateMyJobs.migrate(:up)
 
-    stub_const('MyApplicationJob', Class.new(ActiveJob::Base))
-    MyApplicationJob.class_eval do
+    stub_const('ApplicationJob', Class.new(ActiveJob::Base))
+    ApplicationJob.class_eval do
       self.queue_adapter = MarjAdapter.new(MyRecord)
 
-      extend Marj::JobsInterface
-
-      def self.all
-        Marj::Relation.new(self == MyApplicationJob ? MyRecord.ordered : MyRecord.where(job_class: self).ordered)
-      end
+      include Marj
 
       @runs = []
 
@@ -50,8 +46,8 @@ describe 'Custom Record' do
       end
     end
 
-    stub_const('MyJob', Class.new(MyApplicationJob))
-    stub_const('MyOtherJob', Class.new(MyApplicationJob))
+    stub_const('MyJob', Class.new(ApplicationJob))
+    stub_const('MyOtherJob', Class.new(ApplicationJob))
   end
 
   after do
@@ -62,23 +58,55 @@ describe 'Custom Record' do
     expect { MyJob.perform_later }.to change(MyRecord, :count).from(0).to(1)
   end
 
-  it 'queries jobs' do
-    my_job = MyJob.perform_later
-    Timecop.travel(1.minute)
-    my_other_job = MyOtherJob.perform_later
-    Timecop.travel(1.minute)
-    expect(MyApplicationJob.next.job_id).to eq(my_job.job_id)
-    expect(MyJob.next.job_id).to eq(my_job.job_id)
-    expect(MyOtherJob.next.job_id).to eq(my_other_job.job_id)
+  describe '.query' do
+    it 'queries jobs' do
+      my_job = MyJob.perform_later
+      Timecop.travel(1.minute)
+      my_other_job = MyOtherJob.perform_later
+      Timecop.travel(1.minute)
+      expect(ApplicationJob.query(:first).job_id).to eq(my_job.job_id)
+      expect(MyJob.query(:first).job_id).to eq(my_job.job_id)
+      expect(MyOtherJob.query(:first).job_id).to eq(my_other_job.job_id)
+    end
   end
 
-  it 'runs jobs' do
-    job = MyJob.perform_later('MyApplicationJob.runs << "my_job_1"')
-    expect { job.perform_now }.to change(MyApplicationJob, :runs).from([]).to(['my_job_1'])
+  describe '#perform_now' do
+    it 'runs jobs' do
+      job = MyJob.perform_later('ApplicationJob.runs << "my_job_1"')
+      expect { job.perform_now }.to change(ApplicationJob, :runs).from([]).to(['my_job_1'])
+    end
+
+    it 'deletes records' do
+      job = MyJob.perform_later
+      expect { job.perform_now }.to change(MyRecord, :count).from(1).to(0)
+    end
   end
 
-  it 'deletes records' do
-    job = MyJob.perform_later
-    expect { job.perform_now }.to change(MyRecord, :count).from(1).to(0)
+  describe '.discard' do
+    it 'discards jobs' do
+      job = MyJob.perform_later
+      expect { MyJob.discard(job) }.to change(MyRecord, :count).from(1).to(0)
+    end
+
+    it 'invokes discard callbacks' do
+      MyJob.after_discard { ApplicationJob.runs << 'discarded' }
+      job = MyJob.perform_later
+
+      expect { MyJob.discard(job) }.to change(ApplicationJob, :runs).from([]).to(['discarded'])
+    end
+  end
+
+  describe '#discard' do
+    it 'discards jobs' do
+      job = MyJob.perform_later
+      expect { job.discard }.to change(MyRecord, :count).from(1).to(0)
+    end
+
+    it 'invokes discard callbacks' do
+      MyJob.after_discard { ApplicationJob.runs << 'discarded' }
+      job = MyJob.perform_later
+
+      expect { job.discard }.to change(ApplicationJob, :runs).from([]).to(['discarded'])
+    end
   end
 end

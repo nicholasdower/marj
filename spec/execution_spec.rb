@@ -7,38 +7,38 @@ describe 'Execution' do
     it 'executes the job' do
       TestJob.perform_later('TestJob.runs << 1')
       expect(TestJob.runs).to eq([])
-      Marj.next.perform_now
+      Marj.query(:all).first.perform_now
       expect(TestJob.runs).to eq([1])
     end
 
     it 'returns the result' do
       TestJob.perform_later('1')
-      expect(Marj.next.perform_now).to eq([1])
+      expect(Marj.query(:all).first.perform_now).to eq([1])
     end
 
     it 'deletes the job on success' do
       TestJob.perform_later('TestJob.runs << 1')
-      expect(Marj.count).to eq(1)
-      Marj.next.perform_now
-      expect(Marj.count).to eq(0)
+      expect(Marj::Record.count).to eq(1)
+      Marj.query(:all).first.perform_now
+      expect(Marj::Record.count).to eq(0)
     end
 
     it 'updates the record on success' do
       TestJob.perform_later('TestJob.runs << 1')
       record = Marj::Record.last
-      expect { record.as_job.perform_now }.to change { record.destroyed? }.from(false).to(true)
+      expect { record.to_job.perform_now }.to change { record.destroyed? }.from(false).to(true)
     end
 
     it 're-enqueues the job on failure' do
       TestJob.perform_later('raise "hi"')
-      expect(Marj.next.executions).to eq(0)
-      Marj.next.perform_now
-      expect(Marj.next.executions).to eq(1)
+      expect(Marj.query(:all).first.executions).to eq(0)
+      Marj.query(:all).first.perform_now
+      expect(Marj.query(:all).first.executions).to eq(1)
     end
 
     it 'returns the error on failure' do
       TestJob.perform_later('raise "hi"')
-      result = Marj.next.perform_now
+      result = Marj.query(:all).first.perform_now
       expect(result).to be_a(StandardError)
       expect(result.message).to eq('hi')
     end
@@ -46,30 +46,30 @@ describe 'Execution' do
     it 'updates the record on failure' do
       TestJob.perform_later('raise "hi"')
       record = Marj::Record.last
-      expect { record.as_job.perform_now }.to change { record.executions }.from(0).to(1)
+      expect { record.to_job.perform_now }.to change { record.executions }.from(0).to(1)
     end
 
     it 'deletes the job on discard' do
       TestJob.perform_later('raise "hi"')
-      expect(Marj.count).to eq(1)
-      Marj.next.perform_now
-      expect(Marj.count).to eq(1)
-      Marj.next.perform_now rescue nil
-      expect(Marj.count).to eq(0)
+      expect(Marj::Record.count).to eq(1)
+      Marj.query(:all).first.perform_now
+      expect(Marj::Record.count).to eq(1)
+      Marj.query(:all).first.perform_now rescue nil
+      expect(Marj::Record.count).to eq(0)
     end
 
     it 'updates the record on discard' do
       TestJob.perform_later('raise "hi"')
       record = Marj::Record.last
-      job = record.as_job
+      job = record.to_job
       job.perform_now
       expect { job.perform_now rescue nil }.to change { record.destroyed? }.from(false).to(true)
     end
 
     it 'raises on discard' do
       TestJob.perform_later('raise "hi"')
-      Marj.next.perform_now
-      expect { Marj.next.perform_now }.to raise_error(StandardError, 'hi')
+      Marj.query(:all).first.perform_now
+      expect { Marj.query(:all).first.perform_now }.to raise_error(StandardError, 'hi')
     end
   end
 end

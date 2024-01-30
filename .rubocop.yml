@@ -26,5 +26,8 @@ Metrics/PerceivedComplexity:
 Style/Documentation:
   Enabled: false
 
+Style/ParallelAssignment:
+  Enabled: false
+
 Style/RescueModifier:
   Enabled: false

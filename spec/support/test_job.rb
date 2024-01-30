@@ -2,6 +2,7 @@
 
 # A job that can be used for testing.
 class TestJob < ActiveJob::Base
+  extend Marj
   retry_on Exception, wait: 10.seconds, attempts: 2
 
   @runs = []

@@ -35,33 +35,35 @@ describe Marj::Record do
     end
   end
 
-  describe '.ordered' do
+  describe '.by_due_date' do
+    subject { Marj::Record.by_due_date }
+
     it 'returns jobs with a priority before jobs without a priority' do
       TestJob.set(queue: '1', wait: 2.minute, priority: 1).perform_later
       TestJob.set(queue: '2', wait: 1.minute, priority: nil).perform_later
       Timecop.travel(3.minutes)
-      expect(Marj::Record.ordered.map(&:queue_name)).to eq(%w[1 2])
+      expect(subject.map(&:queue_name)).to eq(%w[1 2])
     end
 
     it 'returns jobs with a scheduled_at in the past before jobs without a scheduled_at' do
       TestJob.set(queue: '1', wait: 1.minute).perform_later
       TestJob.set(queue: '2').perform_later
       Timecop.travel(2.minutes)
-      expect(Marj::Record.ordered.map(&:queue_name)).to eq(%w[1 2])
+      expect(subject.map(&:queue_name)).to eq(%w[1 2])
     end
 
     it 'returns jobs without a scheduled_at before jobs without a scheduled_at in the future' do
       TestJob.set(queue: '1', wait: 2.minute).perform_later
       Timecop.travel(1.minute)
       TestJob.set(queue: '2').perform_later
-      expect(Marj::Record.ordered.map(&:queue_name)).to eq(%w[2 1])
+      expect(subject.map(&:queue_name)).to eq(%w[2 1])
     end
 
     it 'returns jobs with a sooner scheduled_at before jobs with a later scheduled_at' do
       TestJob.set(queue: '1', wait: 2.minute).perform_later
       Timecop.travel(1.second)
       TestJob.set(queue: '2', wait: 1.minute).perform_later
-      expect(Marj::Record.ordered.map(&:queue_name)).to eq(%w[2 1])
+      expect(subject.map(&:queue_name)).to eq(%w[2 1])
     end
 
     it 'returns jobs with a sooner enqueued_at before jobs with a later enqueued_at' do
@@ -69,7 +71,7 @@ describe Marj::Record do
       Timecop.travel(1.minute)
       TestJob.set(queue: '2').perform_later
       Timecop.travel(1.minute)
-      expect(Marj::Record.ordered.map(&:queue_name)).to eq(%w[1 2])
+      expect(subject.map(&:queue_name)).to eq(%w[1 2])
     end
   end
 
@@ -166,6 +168,43 @@ describe Marj::Record do
       it 'raises on unexpected job_class' do
         TestJob.perform_later
         expect { Marj::Record.first.update!(job_class: 1) }.to raise_error(StandardError, 'invalid class: 1')
+      end
+    end
+  end
+
+  describe '#register_callbacks' do
+    context 'when callbacks already registered' do
+      it 'raises' do
+        job = TestJob.perform_later
+        expect { Marj::Record.last.send(:register_callbacks, job) }
+          .to raise_error(RuntimeError, /already registered/)
+      end
+
+      it 'does not re-register callbacks' do
+        job = TestJob.perform_later
+
+        expect(job.singleton_class).not_to receive(:after_perform)
+        expect(job.singleton_class).not_to receive(:after_discard)
+        Marj.send(:register_callbacks, job) rescue nil
+      end
+    end
+  end
+
+  describe '#to_job' do
+    subject { record.send(:to_job) }
+
+    let(:record) { Marj::Record.first }
+    let(:job) { TestJob.perform_later('foo') }
+
+    before { job }
+
+    it 'returns a job instance' do
+      expect(subject).to be_a(TestJob)
+    end
+
+    it 'deserializes the job data' do
+      %i[job_id executions arguments queue_name priority scheduled_at].each do |field|
+        expect(subject.public_send(field)).to eq(job.public_send(field))
       end
     end
   end
