@@ -1,3 +1,11 @@
+## 5.0.0
+
+- Populate `enqueued_at` and `locale` when enqueueing.
+- Add `query` and `discard` to `Marj` and `MarjAdapter`.
+- Remove all existing `Marj` query methods.
+- Remove `JobsInterface`.
+- Remove `Marj::Relation`.
+
 ## 4.1.0
 
 - Deserialize arguments immediately rather than lazily.
