@@ -9,7 +9,7 @@ as possible and the minimum backend-specific API required.
 
 ## Quick Links
 
-API docs: https://gemdocs.org/gems/marj/5.0.0/ <br>
+API docs: https://gemdocs.org/gems/marj/6.0.0.pre/ <br>
 RubyGems: https://rubygems.org/gems/marj <br>
 Changelog: https://github.com/nicholasdower/marj/releases <br>
 Issues: https://github.com/nicholasdower/marj/issues <br>
