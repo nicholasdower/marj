@@ -25,7 +25,7 @@ Development: https://github.com/nicholasdower/marj/blob/master/CONTRIBUTING.md
 - Failed jobs which should not be retried are deleted from the database.
 - An method is provided to query enqueued jobs.
 - An method is provided to discard enqueued jobs.
-- An `ActiveRecord` class is provided to query the database directly.
+- An ActiveRecord class is provided to query the database directly.
 
 ### Not Provided
 
