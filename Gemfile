@@ -15,7 +15,7 @@ group :development, :test do
   gem 'rubocop',            '~> 1.0'
   gem 'simplecov',          '~> 0.0', require: false
   gem 'simplecov-console',  '~> 0.0', require: false
-  gem 'sqlite3',            '~> 1.0'
+  gem 'sqlite3',            '~> 1.7'
   gem 'timecop',            '~> 0.0'
   gem 'yard',               '~> 0.0'
 end
