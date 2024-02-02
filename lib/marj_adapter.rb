@@ -111,10 +111,7 @@ class MarjAdapter
     relation = relation.where(*args, **kwargs) if args.any? || kwargs.any?
     relation = relation.limit(limit) if limit
     relation = relation.send(symbol_args.shift) while symbol_args.any?
-
-    if relation.is_a?(ActiveRecord::Relation)
-      relation = relation.by_due_date unless relation.order_values.any?
-    end
+    relation = relation.by_due_date if relation.is_a?(ActiveRecord::Relation) && relation.order_values.empty?
 
     if relation.is_a?(Enumerable)
       relation.map(&:to_job)
