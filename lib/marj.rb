@@ -36,22 +36,24 @@ module Marj
 
   # Provides the {query} and {discard} class methods.
   module ClassMethods
-    # Queries enqueued jobs.
+    # Queries enqueued jobs. Similar to +ActiveRecord.where+ with a few additional features:
+    # - Leading symbol arguments are treated as +ActiveRecord+ scopes.
+    # - If only a job ID is specified, the corresponding job is returned.
+    # - If +:limit+ is specified, the maximum number of jobs is limited.
+    # - If +:order+ is specified, the jobs are ordered by the given attribute.
     #
-    # Similar to +ActiveRecord.where+ with a few additional features.
+    # By default jobs are ordered by when they should be executed.
     #
     # Example usage:
-    #   query(:all)             # Delegates to Marj::Record.all
-    #   query(:due)             # Delegates to Marj::Record.due
-    #   query(:all, limit: 10)  # Returns a maximum of 10 jobs
-    #   query(job_class: Foo)   # Returns all jobs with job_class Foo
-    #
-    #   query('123')            # Returns the job with id '123' or nil if no such job exists
-    #   query(id: '123')        # Same as above
-    #   query(job_id: '123')    # Same as above
-    #
-    #   query(queue: 'foo')     # Returns all jobs in the 'foo' queue
-    #   query(job_queue: 'foo') # Same as above
+    #   query                       # Returns all jobs
+    #   query(:all)                 # Returns all jobs
+    #   query(:due)                 # Returns jobs which are due to be executed
+    #   query(:due, limit: 10)      # Returns at most 10 jobs which are due to be executed
+    #   query(job_class: Foo)       # Returns all jobs with job_class Foo
+    #   query(:due, job_class: Foo) # Returns jobs which are due to be executed with job_class Foo
+    #   query(queue_name: 'foo')    # Returns all jobs in the 'foo' queue
+    #   query(job_id: '123')        # Returns the job with job_id '123' or nil if no such job exists
+    #   query('123')                # Returns the job with job_id '123' or nil if no such job exists
     def query(*args, **kwargs)
       kwargs[:job_class] ||= self if self < ActiveJob::Base && name != 'ApplicationJob'
       queue_adapter.query(*args, **kwargs)

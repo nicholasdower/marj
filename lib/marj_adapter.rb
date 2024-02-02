@@ -80,22 +80,22 @@ class MarjAdapter
   # - Leading symbol arguments are treated as +ActiveRecord+ scopes.
   # - If only a job ID is specified, the corresponding job is returned.
   # - If +:limit+ is specified, the maximum number of jobs is limited.
+  # - If +:order+ is specified, the jobs are ordered by the given attribute.
+  #
+  # By default jobs are ordered by when they should be executed.
   #
   # Example usage:
-  #   query(:all)             # Delegates to Marj::Record.all
-  #   query(:due)             # Delegates to Marj::Record.due
-  #   query(:all, limit: 10)  # Returns a maximum of 10 jobs
-  #   query(job_class: Foo)   # Returns all jobs with job_class Foo
-  #
-  #   query('123')            # Returns the job with id '123' or nil if no such job exists
-  #   query(id: '123')        # Same as above
-  #   query(job_id: '123')    # Same as above
-  #
-  #   query(queue: 'foo')     # Returns all jobs in the 'foo' queue
-  #   query(job_queue: 'foo') # Same as above
+  #   query                       # Returns all jobs
+  #   query(:all)                 # Returns all jobs
+  #   query(:due)                 # Returns jobs which are due to be executed
+  #   query(:due, limit: 10)      # Returns at most 10 jobs which are due to be executed
+  #   query(job_class: Foo)       # Returns all jobs with job_class Foo
+  #   query(:due, job_class: Foo) # Returns jobs which are due to be executed with job_class Foo
+  #   query(queue_name: 'foo')    # Returns all jobs in the 'foo' queue
+  #   query(job_id: '123')        # Returns the job with job_id '123' or nil if no such job exists
+  #   query('123')                # Returns the job with job_id '123' or nil if no such job exists
   def query(*args, **kwargs)
     args, kwargs = args.dup, kwargs.dup.symbolize_keys
-    kwargs = kwargs.merge(queue_name: kwargs.delete(:queue)) if kwargs.key?(:queue)
     kwargs = kwargs.merge(job_id: kwargs.delete(:id)) if kwargs.key?(:id)
     kwargs[:job_id] = args.shift if args.size == 1 && args.first.is_a?(String) && args.first.match(JOB_ID_REGEX)
 
@@ -106,7 +106,6 @@ class MarjAdapter
     symbol_args = []
     symbol_args << args.shift while args.first.is_a?(Symbol)
     order_by = kwargs.delete(:order)
-    order_by = :queue_name if [:queue, 'queue'].include?(order_by)
     limit = kwargs.delete(:limit)
     symbol_args.shift if symbol_args.first == :all
     relation = record_class.all

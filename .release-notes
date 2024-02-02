@@ -1,1 +1,1 @@
-- No change
+- Remove special handling for `id` and `queue` in `query` method.

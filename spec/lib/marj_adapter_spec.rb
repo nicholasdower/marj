@@ -133,18 +133,11 @@ describe MarjAdapter do
       expect(adapter.query(:all, limit: 2).map(&:job_id)).to contain_exactly(job1.job_id, job2.job_id)
     end
 
-    it 'queries by queue' do
-      job1 = TestJob.set(queue: 'foo').perform_later
-      TestJob.set(queue: 'bar').perform_later
-      job3 = TestJob.set(queue: 'foo').perform_later
-      expect(adapter.query(queue: 'foo').map(&:job_id)).to contain_exactly(job1.job_id, job3.job_id)
-    end
-
     it 'queries by queue_name' do
       job1 = TestJob.set(queue: 'foo').perform_later
       TestJob.set(queue: 'bar').perform_later
       job3 = TestJob.set(queue: 'foo').perform_later
-      expect(adapter.query(queue: 'foo').map(&:job_id)).to contain_exactly(job1.job_id, job3.job_id)
+      expect(adapter.query(queue_name: 'foo').map(&:job_id)).to contain_exactly(job1.job_id, job3.job_id)
     end
 
     it 'queries by :job_id' do
@@ -178,24 +171,6 @@ describe MarjAdapter do
       Timecop.travel(1.minute)
       job3 = TestJob.set(queue: 'b').perform_later
       expect(adapter.query(order: :queue_name).map(&:job_id)).to eq([job2.job_id, job3.job_id, job1.job_id])
-    end
-
-    it 'orders results by :queue' do
-      job1 = TestJob.set(queue: 'c').perform_later
-      Timecop.travel(1.minute)
-      job2 = TestJob.set(queue: 'a').perform_later
-      Timecop.travel(1.minute)
-      job3 = TestJob.set(queue: 'b').perform_later
-      expect(adapter.query(order: :queue).map(&:job_id)).to eq([job2.job_id, job3.job_id, job1.job_id])
-    end
-
-    it 'orders results by "queue"' do
-      job1 = TestJob.set(queue: 'c').perform_later
-      Timecop.travel(1.minute)
-      job2 = TestJob.set(queue: 'a').perform_later
-      Timecop.travel(1.minute)
-      job3 = TestJob.set(queue: 'b').perform_later
-      expect(adapter.query(order: 'queue').map(&:job_id)).to eq([job2.job_id, job3.job_id, job1.job_id])
     end
   end
 
