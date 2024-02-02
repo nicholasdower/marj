@@ -77,7 +77,7 @@ class MarjAdapter
   end
 
   # Queries enqueued jobs. Similar to +ActiveRecord.where+ with a few additional features:
-  # - Leading symbol arguments are treated as +ActiveRecord+ scopes.
+  # - Symbol arguments are treated as +ActiveRecord+ scopes.
   # - If only a job ID is specified, the corresponding job is returned.
   # - If +:limit+ is specified, the maximum number of jobs is limited.
   # - If +:order+ is specified, the jobs are ordered by the given attribute.
@@ -103,17 +103,19 @@ class MarjAdapter
       return record_class.find_by(job_id: kwargs[:job_id])&.to_job
     end
 
-    symbol_args = []
-    symbol_args << args.shift while args.first.is_a?(Symbol)
-    order_by = kwargs.delete(:order)
+    symbol_args, args = args.partition { _1.is_a?(Symbol) }
+    symbol_args.delete(:all)
     limit = kwargs.delete(:limit)
-    symbol_args.shift if symbol_args.first == :all
     relation = record_class.all
-    relation = relation.order(order_by) if order_by
-    relation = relation.by_due_date unless relation.order_values.any?
+    relation = relation.order(kwargs.delete(:order)) if kwargs.key?(:order)
     relation = relation.where(*args, **kwargs) if args.any? || kwargs.any?
     relation = relation.limit(limit) if limit
     relation = relation.send(symbol_args.shift) while symbol_args.any?
+
+    if relation.is_a?(ActiveRecord::Relation)
+      relation = relation.by_due_date unless relation.order_values.any?
+    end
+
     if relation.is_a?(Enumerable)
       relation.map(&:to_job)
     elsif relation.is_a?(record_class)

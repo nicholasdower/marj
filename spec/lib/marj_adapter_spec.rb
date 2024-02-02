@@ -164,13 +164,29 @@ describe MarjAdapter do
       expect(adapter.query(job1.job_id).job_id).to eq(job1.job_id)
     end
 
-    it 'orders results by the specified criteria' do
+    it 'orders jobs by the specified criteria' do
       job1 = TestJob.set(queue: 'c').perform_later
       Timecop.travel(1.minute)
       job2 = TestJob.set(queue: 'a').perform_later
       Timecop.travel(1.minute)
       job3 = TestJob.set(queue: 'b').perform_later
       expect(adapter.query(order: :queue_name).map(&:job_id)).to eq([job2.job_id, job3.job_id, job1.job_id])
+    end
+
+    it 'does not apply ordering if already applied by scope' do
+      stub_const('MyRecord', Class.new(Marj::Record))
+      MyRecord.scope :by_queue_name, -> { order(:queue_name) }
+      stub_const('MyJob', Class.new(TestJob))
+      MyJob.queue_adapter = described_class.new(MyRecord)
+
+      MyJob.set(queue: 'b').perform_later
+      Timecop.travel(1.minute)
+      MyJob.set(queue: 'c').perform_later
+      Timecop.travel(1.minute)
+      MyJob.set(queue: 'a').perform_later
+      Timecop.travel(1.minute)
+      jobs = MyJob.queue_adapter.query(:by_queue_name)
+      expect(jobs.map(&:queue_name)).to eq(%w[a b c])
     end
   end
 

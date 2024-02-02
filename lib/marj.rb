@@ -37,7 +37,7 @@ module Marj
   # Provides the {query} and {discard} class methods.
   module ClassMethods
     # Queries enqueued jobs. Similar to +ActiveRecord.where+ with a few additional features:
-    # - Leading symbol arguments are treated as +ActiveRecord+ scopes.
+    # - Symbol arguments are treated as +ActiveRecord+ scopes.
     # - If only a job ID is specified, the corresponding job is returned.
     # - If +:limit+ is specified, the maximum number of jobs is limited.
     # - If +:order+ is specified, the jobs are ordered by the given attribute.
