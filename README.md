@@ -18,25 +18,40 @@ There are alrady several great database-backed ActiveJob queueing backends:
 - [GoodJob](https://github.com/bensheldon/good_job)
 - [Solid Queue](https://github.com/basecamp/solid_queue)
 
-Any of these is likely to work well for you, assuming it supports your RDBMS.
+Any of these which support your RDBMS are likely to work well for you.
 
 But you may find each to be more featureful and complex than what you require.
 
-Marj aims to provide a database-backed ActiveJob queueing backend which works
-with MySQL, PostgreSQL and SQLite and provides minimal features, configuration
-and backend-specific APIs.
+Marj aims to be a minimal alternative.
 
-Marj has following features:
+## Goals
+
+To be the database-backend ActiveJob queueing backend with:
+- The simplest setup
+- The fewest configuration options
+- The fewest features
+- The fewest backend-specific APIs
+- The fewest lines of code
+
+## Features
+
+Marj supports and has been tested on MySQL, PostgreSQL and SQLite.
+
+It provides the following features:
 - Enqueued jobs are written to the database.
 - Enqueued jobs can be queried, executed and discarded.
-- Executed jobs are either re-enqueued or discarded, depending on the result.
+- Executed jobs are re-enqueued or discarded, depending on the result.
 
-It does have the following features:
-- Automatic job execution
-- Concurrent job execution
-- Job timeouts
-- Observability
-- A user interace
+## Missing Features
+
+Marj does not provide the following features:
+- Automatic job execution - query and execute jobs wherever you like
+- Concurrent job execution - use one thread or one thread per queue
+- Job timeouts - timeouts are easy to add to your job classes (see below)
+- Observability - expose metrics via job callbacks (see below)
+- A user interace - See [Mission Control](https://github.com/basecamp/mission_control-jobs)
+
+## API
 
 Marj relies on existing ActiveJob APIs, for example:
 
@@ -46,7 +61,7 @@ job.perform_now     # Performs a job
 ```
 
 Additionally, it extends the ActiveJob API with two methods required for a
-minimal implementaion:
+minimal queueing backend implementaion:
 
 ```ruby
 SomeJob.query(args) # Queries for enqeueued jobs
