@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class TestJob < ActiveJob::Base
+class TestJob < ApplicationJob
   retry_on Exception, wait: 10.seconds, attempts: 2
 
   @runs = []

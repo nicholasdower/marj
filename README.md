@@ -45,11 +45,11 @@ It provides the following features:
 ## Missing Features
 
 Marj does not provide the following features:
-- Automatic job execution - query and execute jobs wherever you like
+- Automatic job execution - query and execute jobs via `query` and `perform_now`
 - Concurrent job execution - use one thread or one thread per queue
-- Job timeouts - timeouts are easy to add to your job classes (see below)
-- Observability - expose metrics via job callbacks (see below)
-- A user interace - See [Mission Control](https://github.com/basecamp/mission_control-jobs)
+- Job timeouts - see below for a suggestion for how to add timeouts yourself
+- Observability - see below for a suggestion for hot so to expose metrics
+- Retention of discarded jobs - consider enabling infinite retries
 
 ## API
 
@@ -68,12 +68,19 @@ SomeJob.query(args) # Queries for enqeueued jobs
 job.discard         # Discards a job
 ```
 
+Optionally, jobs can also be managed via [Mission Control Jobs](https://github.com/basecamp/mission_control-jobs).
+
+## Requirements
+
+- `activejob >= 7.1`
+- `activerecord >= 7.1`
+
 ## Setup
 
 ### 1. Install
 
 ```shell
-bundle add activejob activerecord marj
+bundle add marj
 ```
 
 ### 2. Create the database table
@@ -276,6 +283,40 @@ end
 
 MyJob.perform_later('oh, hi')
 MyJob.query(:due, :first).perform_now
+```
+
+### Observability
+
+For instance with Prometheus metrics:
+
+```ruby
+class ApplicationJob < ActiveJob::Base
+  counter = Prometheus::Client::Counter.new(
+    :job_events_total, docstring: '...', labels: [:job, :event]
+  )
+
+  around_enqueue do |job, block|
+    counter.increment(labels: { job: job.class.name, event: 'before_enqueue' })
+    block.call
+    counter.increment(labels: { job: job.class.name, event: 'after_enqueue' })
+  rescue Exception
+    counter.increment(labels: { job: job.class.name, event: 'enqueue_error' })
+    raise
+  end
+
+  around_perform do |job, block|
+    counter.increment(labels: { job: job.class.name, event: 'before_perform' })
+    block.call
+    counter.increment(labels: { job: job.class.name, event: 'after_perform' })
+  rescue Exception => e # rubocop:disable Lint/RescueException
+    counter.increment(labels: { job: job.class.name, event: 'perform_error' })
+    raise
+  end
+
+  after_discard do |job|
+    counter.increment(labels: { job: job.class.name, event: 'after_discard' })
+  end
+end
 ```
 
 ## ActiveJob Cheatsheet

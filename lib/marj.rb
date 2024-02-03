@@ -94,3 +94,15 @@ module Marj
   end
   private_class_method :queue_adapter
 end
+
+# :nocov:
+if defined?(Rails)
+  begin
+    require 'mission_control/jobs'
+    require_relative 'marj/mission_control'
+    MarjAdapter.include(Marj::MissionControl)
+  rescue LoadError
+    # ignore
+  end
+end
+# :nocov:

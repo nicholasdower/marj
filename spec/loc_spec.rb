@@ -10,7 +10,7 @@ describe 'LOC' do
     end.size
   end
 
-  it "LOC (#{loc}) does not exceed 200" do
-    expect(loc).to be <= 200
+  it "LOC (#{loc}) does not exceed 300" do
+    expect(loc).to be <= 300
   end
 end
