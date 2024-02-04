@@ -24,6 +24,9 @@ def update_version(version)
     'marj.gemspec',
     File.read('marj.gemspec').sub(/^version = '.*'$/, "version = '#{version}'")
   )
+end
+
+def update_readme_version(version)
   File.write(
     'README.md',
     File.read('README.md').sub(
@@ -53,6 +56,7 @@ puts "Notes:\n#{notes}\n\n"
 
 puts 'Updating version'
 update_version(version)
+update_readme_version(version)
 
 `bundle install`
 `cd sample-rails-app && bundle install`

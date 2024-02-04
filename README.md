@@ -4,7 +4,7 @@ A minimal database-backed ActiveJob queueing backend.
 
 ## Quick Links
 
-API docs: https://gemdocs.org/gems/marj/6.0.0.pre/ <br>
+API docs: https://gemdocs.org/gems/marj/5.0.0/ <br>
 RubyGems: https://rubygems.org/gems/marj <br>
 Changelog: https://github.com/nicholasdower/marj/releases <br>
 Issues: https://github.com/nicholasdower/marj/issues <br>
@@ -12,19 +12,18 @@ Development: https://github.com/nicholasdower/marj/blob/master/CONTRIBUTING.md
 
 ## Motivation
 
-There are alrady several great database-backed ActiveJob queueing backends:
+There are already several great database-backed ActiveJob queueing backends:
 - [Delayed::Job](https://github.com/collectiveidea/delayed_job)
 - [Que](https://github.com/que-rb/que)
 - [GoodJob](https://github.com/bensheldon/good_job)
 - [Solid Queue](https://github.com/basecamp/solid_queue)
 
-Any of these which support your RDBMS are likely to work well for you.
-
-But you may find each to be more featureful and complex than what you require.
+Any of these which support your RDBMS is likely to work well for you. But you
+may find them all to be more featureful and complex than what you require.
 
 Marj aims to be a minimal alternative.
 
-## Goals
+## Goal
 
 To be the database-backend ActiveJob queueing backend with:
 - The simplest setup
@@ -35,21 +34,26 @@ To be the database-backend ActiveJob queueing backend with:
 
 ## Features
 
-Marj supports and has been tested on MySQL, PostgreSQL and SQLite.
+Marj supports and has been tested with MySQL, PostgreSQL and SQLite.
 
 It provides the following features:
 - Enqueued jobs are written to the database.
 - Enqueued jobs can be queried, executed and discarded.
 - Executed jobs are re-enqueued or discarded, depending on the result.
+- Compatibility with [Mission Control Jobs](https://github.com/basecamp/mission_control-jobs).
 
 ## Missing Features
 
-Marj does not provide the following features:
-- Automatic job execution - query and execute jobs via `query` and `perform_now`
-- Concurrent job execution - use one thread or one thread per queue
-- Job timeouts - see below for a suggestion for how to add timeouts yourself
-- Observability - see below for a suggestion for hot so to expose metrics
-- Retention of discarded jobs - enable infinite retries
+Marj does not provide the following features by default, but each can easily
+be added to your application with a few lines of code. See [Example Usage](#example-usage)
+and [Extension Examples](#extension-examples) for suggestions.
+- [Automatic job execution](#example-usage)
+- [Concurrency protection](#concurrency-protection)
+- [Job timeouts](#job-timeouts)
+- [Error storage](#error-storage)
+- [Discarded job retention](#discarded-job-retention)
+- [Observability](#observability)
+- [Multi-DB Support](#multi-db-support)
 
 ## API
 
@@ -68,8 +72,6 @@ SomeJob.query(args) # Queries for enqeueued jobs
 job.discard         # Runs discard callbacks and, by default, deletes the job
 job.delete          # Deletes the job
 ```
-
-Optionally, jobs can also be managed via [Mission Control Jobs](https://github.com/basecamp/mission_control-jobs).
 
 ## Requirements
 
@@ -198,9 +200,14 @@ ActiveJob::Base.queue_adapter = :test
 
 ## Extension Examples
 
-Most missing features can easily be added to your application.
+Most missing features can easily be added to your application with a few lines
+of code.
 
-### Timeouts
+### Concurrency Protection
+
+TBD
+
+### Job Timeouts
 
 ```ruby
 class ApplicationJob < ActiveJob::Base
@@ -220,7 +227,7 @@ class ApplicationJob < ActiveJob::Base
 end
 ```
 
-### Last Error
+### Error Storage
 
 ```ruby
 class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
@@ -279,31 +286,6 @@ Marj.delete(job)
 job.delete
 ```
 
-### Custom DB Setup
-
-It is possible to create a custom record class in order to, for instance,
-use a different class or table name, or write jobs to multiple
-databases/tables within a single application.
-
-Assuming you have a jobs tabled named `my_jobs`:
-
-```ruby
-class MyRecord < Marj::Record
-  self.table_name = 'my_jobs'
-end
-
-class MyJob < ActiveJob::Base
-  self.queue_adapter = MarjAdapter.new('MyRecord')
-
-  include Marj
-
-  def perform; end
-end
-
-MyJob.perform_later('oh, hi')
-MyJob.query(:due, :first).perform_now
-```
-
 ### Observability
 
 For instance with Prometheus metrics:
@@ -336,6 +318,31 @@ class ApplicationJob < ActiveJob::Base
     counter.increment(labels: { job: job.class.name, event: 'after_discard' })
   end
 end
+```
+
+### Multi-DB Support
+
+It is possible to create a custom record class in order to, for instance,
+use a different class or table name, or write jobs to multiple
+databases/tables within a single application.
+
+Assuming you have a jobs tabled named `my_jobs`:
+
+```ruby
+class MyRecord < Marj::Record
+  self.table_name = 'my_jobs'
+end
+
+class MyJob < ActiveJob::Base
+  include Marj
+
+  self.queue_adapter = MarjAdapter.new('MyRecord')
+
+  def perform; end
+end
+
+MyJob.perform_later('oh, hi')
+MyJob.query(:due, :first).perform_now
 ```
 
 ## ActiveJob Cheatsheet
