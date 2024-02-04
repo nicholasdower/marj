@@ -177,7 +177,7 @@ describe MarjAdapter do
       stub_const('MyRecord', Class.new(Marj::Record))
       MyRecord.scope :by_queue_name, -> { order(:queue_name) }
       stub_const('MyJob', Class.new(TestJob))
-      MyJob.queue_adapter = described_class.new(MyRecord)
+      MyJob.queue_adapter = described_class.new(record_class: MyRecord)
 
       MyJob.set(queue: 'b').perform_later
       Timecop.travel(1.minute)
@@ -218,7 +218,7 @@ describe MarjAdapter do
       end
     end
 
-    context 'when the job was ready from the database' do
+    context 'when the job was read from the database' do
       it 'discards the job' do
         job = TestJob.perform_later
         expect { adapter.discard(job) }.to change(Marj::Record, :count).from(1).to(0)
@@ -248,6 +248,44 @@ describe MarjAdapter do
           Marj::Record.delete_all
           expect(adapter.discard(job)).to be_a(TestJob)
           expect(adapter.discard(job).job_id).to eq(job.job_id)
+        end
+      end
+    end
+  end
+
+  describe '#delete' do
+    let(:adapter) { described_class.new }
+
+    context 'when the job was read from the database' do
+      it 'discards the job' do
+        job = TestJob.perform_later
+        expect { adapter.delete(job) }.to change(Marj::Record, :count).from(1).to(0)
+      end
+
+      it 'returns the job' do
+        job = TestJob.perform_later
+        Marj::Record.delete_all
+        expect(adapter.delete(job)).to be_a(TestJob)
+        expect(adapter.delete(job).job_id).to eq(job.job_id)
+      end
+    end
+
+    context 'when the job was only initialized' do
+      it 'discards the job' do
+        original_job = TestJob.perform_later
+        job = TestJob.new
+        job.deserialize(original_job.serialize)
+        expect { adapter.delete(job) }.to change(Marj::Record, :count).from(1).to(0)
+      end
+
+      context 'when the record does not exist' do
+        it 'returns the job' do
+          original_job = TestJob.perform_later
+          job = TestJob.new
+          job.deserialize(original_job.serialize)
+          Marj::Record.delete_all
+          expect(adapter.delete(job)).to be_a(TestJob)
+          expect(adapter.delete(job).job_id).to eq(job.job_id)
         end
       end
     end

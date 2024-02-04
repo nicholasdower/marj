@@ -6,13 +6,15 @@ require_relative 'marj_adapter'
 #
 # The {Marj} module provides the following methods:
 # - +query+ - Queries enqueued jobs
-# - +discard+ - Discards a job
+# - +discard+ - Discards a job, by default by executing after_discard callbacks and delegating to delete
+# - +delete+ - Deletes a job
 #
 # It is possible to call the above methods on the {Marj} module itself or on any class which includes it.
 #
 # Example usage:
 #   Marj.query(:first) # Returns the first job
 #   Marj.discard(job)  # Discards the specified job
+#   Marj.delete(job)  # Deletes the specified job
 #
 #   class ApplicationJob < ActiveJob::Base
 #     include Marj
@@ -25,7 +27,9 @@ require_relative 'marj_adapter'
 #   job = ApplicationJob.query(:first) # Returns the first enqueued job
 #   job = SomeJob.query(:first)        # Returns the first enqueued job with job_class SomeJob
 #   ApplicationJob.discard(job)        # Discards the specified job
+#   ApplicationJob.delete(job)         # Deletes the specified job
 #   job.discard                        # Discards the job
+#   job.delete                         # Deletes the job
 #
 # See https://github.com/nicholasdower/marj
 module Marj
@@ -65,6 +69,13 @@ module Marj
     def discard(job)
       queue_adapter.discard(job)
     end
+
+    # Deletes the record associated with the specified job.
+    #
+    # @return [ActiveJob::Base] the deleted job
+    def delete(job)
+      queue_adapter.delete(job)
+    end
   end
 
   # (see ClassMethods#query)
@@ -77,11 +88,23 @@ module Marj
     queue_adapter.discard(job)
   end
 
-  # Discards this job.
+  # (see ClassMethods#delete)
+  def self.delete(job)
+    queue_adapter.delete(job)
+  end
+
+  # Deletes this job.
   #
   # @return [ActiveJob::Base] this job
   def discard
     self.class.queue_adapter.discard(self)
+  end
+
+  # Deletes the record associated with this job.
+  #
+  # @return [ActiveJob::Base] this job
+  def delete
+    self.class.queue_adapter.delete(self)
   end
 
   def self.included(clazz)

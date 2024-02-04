@@ -2,11 +2,13 @@
 
 # ActiveJob queue adapter for Marj.
 #
-# In addition to the standard +ActiveJob+ queue adapter API, this adapter provides a +query+ method which can be used to
-# query enqueued jobs and a +discard+ method which can be used to discard enqueued jobs.
+# In addition to the standard +ActiveJob+ queue adapter API, this adapter provides:
+# - A +query+ method which can be used to query enqueued jobs
+# - A +discard+ method which can be used to discard enqueued jobs.
+# - A +delete+ method which can be used to delete enqueued jobs.
 #
-# Although it is possible to access the adapter directly in order to query or discard, it is recommended to use the
-# {Marj} module.
+# Although it is possible to access the adapter directly in order to query, discard or delete, it is recommended to use
+# the {Marj} module.
 #
 # See https://github.com/nicholasdower/marj
 class MarjAdapter
@@ -15,9 +17,11 @@ class MarjAdapter
 
   # Creates a new adapter which will enqueue jobs using the given +ActiveRecord+ class.
   #
-  # @param record_class [Class, String] the +ActiveRecord+ class (or its name) to use to store jobs
-  def initialize(record_class = 'Marj::Record')
+  # @param record_class [Class, String] the +ActiveRecord+ class (or its name) to use, defaults to +Marj::Record+
+  # @param discard [Proc] the proc to use to discard jobs, defaults to delegating to {delete}
+  def initialize(record_class: 'Marj::Record', discard: proc { |job| delete(job) })
     @record_class = record_class
+    @discard_proc = discard
   end
 
   # Enqueue a job for immediate execution.
@@ -124,12 +128,46 @@ class MarjAdapter
 
   # Discards the specified job.
   #
+  # @param job [ActiveJob::Base] the job being discarded
+  # @param run_callbacks [Boolean] whether to run the +after_discard+ callbacks
   # @return [ActiveJob::Base] the discarded job
-  def discard(job)
+  def discard(job, run_callbacks: true)
+    job.tap do
+      @discard_proc.call(job)
+      run_after_discard_callbacks(job) if run_callbacks
+    end
+  end
+
+  # Deletes the record associated with the specified job.
+  #
+  # @return [ActiveJob::Base] the deleted job
+  def delete(job)
+    job.tap { destroy_record(job) }
+  end
+
+  private
+
+  # Returns the +ActiveRecord+ class to use to store jobs.
+  #
+  # @return [Class] the +ActiveRecord+ class
+  def record_class
+    @record_class = @record_class.is_a?(String) ? @record_class.constantize : @record_class
+  end
+
+  # Destroys the record associated with the given job if it exists.
+  #
+  # @return [ActiveRecord::Base, NilClass] the destroyed record or +nil+ if no such record exists
+  def destroy_record(job)
     record = job.singleton_class.instance_variable_get(:@record)
     record ||= Marj::Record.find_by(job_id: job.job_id)&.tap { _1.send(:register_callbacks, job) }
     record&.destroy
+  end
 
+  # Invokes the specified job's +after_discard+ callbacks.
+  #
+  # @param job [ActiveJob::Base] the job being discarded
+  # @return [NilClass] the given job
+  def run_after_discard_callbacks(job)
     # Copied from ActiveJob::Exceptions#run_after_discard_procs
     exceptions = []
     job.after_discard_procs.each do |blk|
@@ -139,12 +177,6 @@ class MarjAdapter
     end
     raise exceptions.last if exceptions.any?
 
-    job
-  end
-
-  private
-
-  def record_class
-    @record_class = @record_class.is_a?(String) ? @record_class.constantize : @record_class
+    nil
   end
 end

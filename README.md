@@ -49,7 +49,7 @@ Marj does not provide the following features:
 - Concurrent job execution - use one thread or one thread per queue
 - Job timeouts - see below for a suggestion for how to add timeouts yourself
 - Observability - see below for a suggestion for hot so to expose metrics
-- Retention of discarded jobs - consider enabling infinite retries
+- Retention of discarded jobs - enable infinite retries
 
 ## API
 
@@ -60,12 +60,13 @@ job.enqueue         # Enqueues a job
 job.perform_now     # Performs a job
 ```
 
-Additionally, it extends the ActiveJob API with two methods required for a
+Additionally, it extends the ActiveJob API with methods required for a
 minimal queueing backend implementaion:
 
 ```ruby
 SomeJob.query(args) # Queries for enqeueued jobs
-job.discard         # Discards a job
+job.discard         # Runs discard callbacks and, by default, deletes the job
+job.delete          # Deletes the job
 ```
 
 Optionally, jobs can also be managed via [Mission Control Jobs](https://github.com/basecamp/mission_control-jobs).
@@ -258,6 +259,24 @@ class ApplicationJob < ActiveJob::Base
     super.tap { self.last_error = job_data['last_error'] }
   end
 end
+```
+
+### Discarded Job Retention
+
+By default, discarded jobs are deleted from the database. If desired, this
+behavior can be overridden, for instance to move jobs to a differnt queue:
+
+```ruby
+ActiveJob::Base.queue_adapter = MarjAdapter.new(
+  discard: proc { _1.enqueue(queue: 'discarded') }
+)
+
+# To retrieve a discarded job, query the discarded queue:
+job = Marj.query(:first, queue_name: 'discarded')
+
+# To delete, use one of the following:
+Marj.delete(job)
+job.delete
 ```
 
 ### Custom DB Setup

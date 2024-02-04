@@ -33,7 +33,7 @@ describe 'Custom Record' do
 
     stub_const('ApplicationJob', Class.new(ActiveJob::Base))
     ApplicationJob.class_eval do
-      self.queue_adapter = MarjAdapter.new(MyRecord)
+      self.queue_adapter = MarjAdapter.new(record_class: MyRecord)
 
       include Marj
 

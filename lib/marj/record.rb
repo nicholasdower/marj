@@ -84,8 +84,8 @@ module Marj
       #  - If a job succeeds, after_perform will be called.
       #  - If a job fails and should be retried, enqueue will be called. This is handled by the queue adapter.
       #  - If a job exceeds its max attempts, after_discard will be called.
-      job.singleton_class.after_perform { |_j| record.destroy! }
-      job.singleton_class.after_discard { |_j, _exception| record.destroy! }
+      job.singleton_class.after_perform { |_j| job.queue_adapter.delete(job) }
+      job.singleton_class.after_discard { |_j, _exception| job.queue_adapter.discard(job, run_callbacks: false) }
       job.singleton_class.instance_variable_set(:@record, record)
 
       job
