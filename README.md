@@ -19,7 +19,7 @@ There are already several great database-backed ActiveJob queueing backends:
 - [Solid Queue](https://github.com/basecamp/solid_queue)
 
 Any of these which support your RDBMS is likely to work well for you. But you
-may find them all to be more featureful and complex than what you require.
+may find them to be more featureful and complex than what you require.
 
 Marj aims to be a minimal alternative.
 
@@ -42,7 +42,7 @@ It provides the following features:
 - Executed jobs are re-enqueued or discarded, depending on the result.
 - Compatibility with [Mission Control Jobs](https://github.com/basecamp/mission_control-jobs).
 
-## Missing Features
+## Extensions
 
 Marj does not provide the following features by default, but each can easily
 be added to your application with a few lines of code. See [Example Usage](#example-usage)
@@ -120,6 +120,7 @@ end
 ```ruby
 require 'marj'
 
+# Choose one of the following:
 Rails.configuration.active_job.queue_adapter = :marj # Globally, with Rails
 ActiveJob::Base.queue_adapter = :marj                # Globally, without Rails
 SomeJob.queue_adapter = :marj                        # Single job
