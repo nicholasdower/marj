@@ -3,4 +3,7 @@
 source 'https://rubygems.org'
 
 gem 'marj', path: '../'
+gem 'rspec-core', '~> 3.0'
+gem 'rspec-expectations', '~> 3.0'
+gem 'rspec-mocks', '~> 3.0'
 gem 'sqlite3', '~> 1.4'
