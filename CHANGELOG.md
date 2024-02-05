@@ -1,3 +1,10 @@
+## 6.0.0
+
+- Remove special handling for `id` and `queue` in `query` method.
+- Fix bug where due date ordering was applied by `query` even if an ordered scope was used.
+- Add support for Mission Control Jobs.
+- Add `delete` method and ability to override discard behavior.
+
 ## 5.0.0
 
 - Populate `enqueued_at` and `locale` when enqueueing.
