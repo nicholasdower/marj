@@ -206,7 +206,37 @@ of code.
 
 ### Concurrency Protection
 
-TBD
+To prevent two threads from executing the same job simultaneously, consider
+moving jobs to a different queue before executing them.
+
+```ruby
+class ApplicationJob < ActiveJob::Base
+  around_perform do |job, block|
+    if job.queue_name.start_with?('claimed')
+      raise "Job #{job.job_id} already claimed"
+    end
+
+    updated = Marj::Record
+      .where(job_id: job.job_id, queue_name: job.queue_name)
+      .update_all(
+        queue_name: "claimed-#{job.queue_name}",
+        scheduled_at: Time.now.utc
+      )
+    unless updated == 1
+      raise "Failed to claim job #{job.job_id}. #{updated} records updated"
+    end
+    
+    begin
+      block.call
+    rescue StandardError
+      Marj::Record
+        .where(job_id: job.job_id, queue_name: "claimed-#{job.queue_name}")
+        .update_all(queue_name: job.queue_name, scheduled_at: job.scheduled_at)
+      raise
+    end
+  end
+end
+```
 
 ### Job Timeouts
 
