@@ -61,7 +61,7 @@ Marj relies on existing ActiveJob APIs, for example:
 
 ```ruby
 job.enqueue         # Enqueues a job
-job.perform_now     # Performs a job
+job.perform_now     # Executes a job
 ```
 
 Additionally, it extends the ActiveJob API with methods required for a
@@ -457,7 +457,7 @@ job = SomeJob.new.deserialize(other_job.serialize)
 job = SomeJob.perform_later
 job = SomeJob.perform_later(args)
 
-# Create without enqueueing and run (only enqueued on failure if retryable)
+# Create without enqueueing and run (only enqueued on retryable failure)
 SomeJob.perform_now
 SomeJob.perform_now(args)
 ```
@@ -478,7 +478,7 @@ SomeJob.perform_later(SomeJob.new(args))
 SomeJob.perform_later(args)
 SomeJob.set(options).perform_later(args)
 
-# After a failure during execution
+# After a retryable execution failure
 SomeJob.perform_now(args)
 ActiveJob::Base.execute(SomeJob.new(args).serialize)
 
@@ -492,7 +492,7 @@ SomeJob.set(options).perform_all_later(SomeJob.new, SomeJob.new, options:)
 ### Executing Jobs
 
 ```ruby
-# Executed without enqueueing, enqueued on failure if retryable
+# Executed without enqueueing, enqueued on retryable failure
 SomeJob.new(args).perform_now
 SomeJob.perform_now(args)
 ActiveJob::Base.execute(SomeJob.new(args).serialize)
