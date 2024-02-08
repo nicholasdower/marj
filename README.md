@@ -161,25 +161,25 @@ end
 job = SomeJob.perform_later('foo')
 
 # Query jobs
-SomeJob.query(:all)
-SomeJob.query(:due)
-SomeJob.query(:due, queue: :foo)
-SomeJob.query('8720417d-8fff-4fcf-bc16-22aaef8543d2')
+Marj.query(:all)
+Marj.query(:due)
+Marj.query(:due, queue: :foo)
+Marj.query('8720417d-8fff-4fcf-bc16-22aaef8543d2')
 
 # Execute a job
 job.perform_now
 
 # Execute jobs which are due (single query)
-SomeJob.query(:due).map(&:perform_now)
+Marj.query(:due).map(&:perform_now)
 
 # Execute jobs which are due (multiple queries)
-loop {
-  SomeJob.query(:due, :first)&.tap(&:perform_now) || break
+loop do
+  Marj.query(:due, :first)&.tap(&:perform_now) || break
 end
 
 # Execute jobs as they become due
 loop do
-  SomeJob.query(:due).each(&:perform_now) rescue logger.error($!)
+  Marj.query(:due).each(&:perform_now) rescue logger.error($!)
 ensure
   sleep 5.seconds
 end
