@@ -35,6 +35,7 @@ class CreateJobs < ActiveRecord::Migration[7.1]
       table.string   :timezone,             null: false
     end
 
+    add_index :jobs, %i[job_class]
     add_index :jobs, %i[enqueued_at]
     add_index :jobs, %i[scheduled_at]
     add_index :jobs, %i[priority scheduled_at enqueued_at]
