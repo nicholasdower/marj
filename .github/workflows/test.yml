@@ -8,12 +8,12 @@ on:
     paths:
       - '**'
       - '!**/*.md'
-      - '!/.release-notes'
-      - '!/script/release.rb'
-      - '!/script/console.rb'
-      - '!/LICENSE.txt'
-      - '!/.github/dependabot.yml'
-      - '!/.github/workflows/release.yml'
+      - '!.release-notes'
+      - '!script/release.rb'
+      - '!script/console.rb'
+      - '!LICENSE.txt'
+      - '!.github/dependabot.yml'
+      - '!.github/workflows/release.yml'
 
 jobs:
   build-lint-test-2-7-0-sqlite:
