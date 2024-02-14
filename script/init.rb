@@ -36,6 +36,7 @@ class CreateJobs < ActiveRecord::Migration[7.1]
     end
 
     add_index :jobs, %i[job_class]
+    add_index :jobs, %i[queue_name]
     add_index :jobs, %i[enqueued_at]
     add_index :jobs, %i[scheduled_at]
     add_index :jobs, %i[priority scheduled_at enqueued_at]
