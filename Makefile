@@ -94,7 +94,7 @@ mysql-logs:
 mysql-server:
 	docker compose down
 	make mysql-logs
-	docker-compose up -d marj_mysql_healthy
+	docker compose up -d marj_mysql_healthy
 
 .PHONY: mysql-server-healthy
 mysql-server-healthy: mysql-logs
@@ -107,7 +107,7 @@ mysql-client:
 .PHONY: postgres-server
 postgres-server:
 	docker compose down
-	docker-compose up -d marj_postgres_healthy
+	docker compose up -d marj_postgres_healthy
 
 .PHONY: postgres-server-healthy
 postgres-server-healthy: 
