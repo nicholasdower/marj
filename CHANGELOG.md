@@ -1,3 +1,7 @@
+## 6.1.0
+
+- Add index on queue_name.
+
 ## 6.0.0
 
 - Remove special handling for `id` and `queue` in `query` method.
