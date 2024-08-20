@@ -16,21 +16,6 @@ on:
       - '!.github/workflows/release.yml'
 
 jobs:
-  build-lint-test-3-0-0-sqlite:
-    name: Build, Lint, Test (3.0.0, SQLite)
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.0.0'
-      - name: Lint
-        run: make rubocop
-      - name: Unit
-        run: make unit-sqlite
-      - name: Integration
-        run: make integration
   build-lint-test-coverage-doc-3-3-0-sqlite:
     name: Build, Lint, Test, Coverage, Doc (3.3.0, SQLite)
     runs-on: ubuntu-latest
