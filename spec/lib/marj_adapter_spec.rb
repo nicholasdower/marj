@@ -3,6 +3,14 @@
 require_relative '../spec_helper'
 
 describe MarjAdapter do
+  describe '#enqueue_after_transaction_commit?' do
+    subject { MarjAdapter.new.enqueue_after_transaction_commit? }
+
+    it 'returns false' do
+      expect(subject).to eq(false)
+    end
+  end
+
   describe '#enqueue_at' do
     subject { MarjAdapter.new.enqueue_at(job, timestamp) }
 

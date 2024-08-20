@@ -24,6 +24,12 @@ class MarjAdapter
     @discard_proc = discard
   end
 
+  # Returns whether jobs enqueued during a transaction should actually be enqueued only after the
+  # transaction is committed.
+  def enqueue_after_transaction_commit?
+    false
+  end
+
   # Enqueue a job for immediate execution.
   #
   # @param job [ActiveJob::Base] the job to enqueue
