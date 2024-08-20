@@ -16,15 +16,15 @@ on:
       - '!.github/workflows/release.yml'
 
 jobs:
-  build-lint-test-2-7-0-sqlite:
-    name: Build, Lint, Test (2.7.0, SQLite)
+  build-lint-test-3-0-0-sqlite:
+    name: Build, Lint, Test (3.0.0, SQLite)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '2.7.0'
+          ruby-version: '3.0.0'
       - name: Lint
         run: make rubocop
       - name: Unit
