@@ -24,6 +24,6 @@ Gem::Specification.new do |spec|
 
   spec.files = Dir['lib/**/*'] + %w[README.md LICENSE.txt]
 
-  spec.add_runtime_dependency 'activejob', '>=  7.1'
-  spec.add_runtime_dependency 'activerecord', '>=  7.1'
+  spec.add_dependency 'activejob', '>=  7.1'
+  spec.add_dependency 'activerecord', '>=  7.1'
 end
